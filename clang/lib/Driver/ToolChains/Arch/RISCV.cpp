@@ -15,6 +15,7 @@
 #include "clang/Driver/Options.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Option/ArgList.h"
+#include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/RISCVISAInfo.h"
 #include "llvm/Support/raw_ostream.h"
@@ -239,6 +240,13 @@ StringRef riscv::getRISCVABI(const ArgList &Args, const llvm::Triple &Triple) {
   // rv64g | rv64*d -> lp64d
   // rv64* -> lp64
   StringRef Arch = getRISCVArch(Args, Triple);
+  if (Triple.getSubArch() == llvm::Triple::RISCV32SubArch_cheriot) {
+    llvm::Triple::OSType OS = Triple.getOS();
+    if (OS == llvm::Triple::CheriotRTOS)
+      return "cheriot";
+    else if (OS == llvm::Triple::UnknownOS)
+      return "cheriot-baremetal";
+  }
 
   auto ParseResult = llvm::RISCVISAInfo::parseArchString(
       Arch, /* EnableExperimentalExtension */ true);

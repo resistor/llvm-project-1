@@ -229,6 +229,7 @@ public:
     WASI,       // Experimental WebAssembly OS
     Emscripten,
     ShaderModel, // DirectX ShaderModel
+    CheriotRTOS,
     LiteOS,
     LastOSType = LiteOS
   };

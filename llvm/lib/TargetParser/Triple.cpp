@@ -245,6 +245,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
   case Win32: return "windows";
   case ZOS: return "zos";
   case ShaderModel: return "shadermodel";
+  case CheriotRTOS: return "cheriotrtos";
   case LiteOS: return "liteos";
   }
 
@@ -626,6 +627,7 @@ static Triple::OSType parseOS(StringRef OSName) {
     .StartsWith("emscripten", Triple::Emscripten)
     .StartsWith("shadermodel", Triple::ShaderModel)
     .StartsWith("liteos", Triple::LiteOS)
+    .StartsWith("cheriotrtos", Triple::CheriotRTOS)
     .Default(Triple::UnknownOS);
 }
 
