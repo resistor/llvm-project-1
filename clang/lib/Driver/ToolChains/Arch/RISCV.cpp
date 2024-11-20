@@ -336,6 +336,8 @@ StringRef riscv::getRISCVArch(const llvm::opt::ArgList &Args,
   // We deviate from GCC's defaults here:
   // - On `riscv{XLEN}-unknown-elf` we default to `rv{XLEN}imac`
   // - On all other OSs we use `rv{XLEN}imafdc` (equivalent to `rv{XLEN}gc`)
+  if (Triple.getSubArch() == llvm::Triple::RISCV32SubArch_cheriot)
+    return "rv32emc_xcheri";
   if (Triple.isRISCV32()) {
     if (Triple.getOS() == llvm::Triple::UnknownOS)
       return "rv32imac";
@@ -364,6 +366,9 @@ std::string riscv::getRISCVTargetCPU(const llvm::opt::ArgList &Args,
 
   if (!CPU.empty())
     return CPU;
+
+  if (Triple.getSubArch() == llvm::Triple::RISCV32SubArch_cheriot)
+    return "cheriot";
 
   return Triple.isRISCV64() ? "generic-rv64" : "generic-rv32";
 }

@@ -165,6 +165,8 @@ public:
     SPIRVSubArch_v13,
     SPIRVSubArch_v14,
     SPIRVSubArch_v15,
+
+    RISCV32SubArch_cheriot
   };
   enum VendorType {
     UnknownVendor,

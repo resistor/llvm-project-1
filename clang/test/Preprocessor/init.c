@@ -318,8 +318,8 @@
 
 
 // Check for CHERIoT-specific defines
-// RUN: %clang_cc1 %s -o - "-triple" "riscv32-unknown-unknown" "-emit-llvm" "-mframe-pointer=none" "-mcmodel=small" "-target-cpu" "cheriot" "-target-feature" "+xcheri" "-target-feature" "-64bit" "-target-feature" "-relax" "-target-feature" "-xcheri-rvc" "-target-feature" "-save-restore" "-target-abi" "cheriot" -E -dM < /dev/null | FileCheck -check-prefix CHERIOT %s
-// RUN: %clang_cc1 %s -o - "-triple" "riscv32-unknown-unknown" "-emit-llvm" "-mframe-pointer=none" "-mcmodel=small" "-target-cpu" "cheriot" "-target-feature" "+xcheri" "-target-feature" "-64bit" "-target-feature" "-relax" "-target-feature" "-xcheri-rvc" "-target-feature" "-save-restore" "-target-abi" "cheriot-baremetal" -E -dM < /dev/null | FileCheck -check-prefixes CHERIOT,CHERIOT-BAREMETAL %s
+// RUN: %clang_cc1 %s -o - "-triple" "riscv32cheriot-unknown-unknown" "-emit-llvm" "-mframe-pointer=none" "-mcmodel=small" "-target-abi" "cheriot" -E -dM < /dev/null | FileCheck -check-prefix CHERIOT %s
+// RUN: %clang_cc1 %s -o - "-triple" "riscv32cheriot-unknown-unknown" "-emit-llvm" "-mframe-pointer=none" "-mcmodel=small" "-target-abi" "cheriot-baremetal" -E -dM < /dev/null | FileCheck -check-prefixes CHERIOT,CHERIOT-BAREMETAL %s
 // CHERIOT-BAREMETAL: #define __CHERIOT_BAREMETAL__ 20241018
 // CHERIOT: #define __CHERIOT__ 20241018
 
