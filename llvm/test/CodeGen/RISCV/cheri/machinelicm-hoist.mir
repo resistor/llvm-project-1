@@ -95,7 +95,6 @@ body:             |
   ; CHECK-NEXT:   [[CGetType:%[0-9]+]]:gpr = CGetType [[COPY2]]
   ; CHECK-NEXT:   [[CGetBase:%[0-9]+]]:gpr = CGetBase [[COPY2]]
   ; CHECK-NEXT:   [[CGetLen:%[0-9]+]]:gpr = CGetLen [[COPY2]]
-  ; CHECK-NEXT:   [[CGetTag:%[0-9]+]]:gpr = CGetTag [[COPY2]]
   ; CHECK-NEXT:   [[CGetSealed:%[0-9]+]]:gpr = CGetSealed [[COPY2]]
   ; CHECK-NEXT:   [[CGetOffset:%[0-9]+]]:gpr = CGetOffset [[COPY2]]
   ; CHECK-NEXT:   [[PseudoCGetAddr:%[0-9]+]]:gpr = PseudoCGetAddr [[COPY2]]
@@ -142,6 +141,7 @@ body:             |
   ; CHECK-NEXT: bb.3.if.then:
   ; CHECK-NEXT:   successors: %bb.4(0x80000000)
   ; CHECK-NEXT: {{  $}}
+  ; CHECK-NEXT:   [[CGetTag:%[0-9]+]]:gpr = CGetTag [[COPY2]]
   ; CHECK-NEXT:   [[CSeal:%[0-9]+]]:gpcr = CSeal [[COPY1]], [[COPY2]]
   ; CHECK-NEXT:   [[CUnseal:%[0-9]+]]:gpcr = CUnseal [[COPY1]], [[COPY2]]
   ; CHECK-NEXT:   [[CAndPerm4:%[0-9]+]]:gpcr = CAndPerm [[COPY1]], [[COPY]]
@@ -213,7 +213,6 @@ body:             |
   ; TAG-CLEAR-NEXT:   [[CGetType:%[0-9]+]]:gpr = CGetType [[COPY2]]
   ; TAG-CLEAR-NEXT:   [[CGetBase:%[0-9]+]]:gpr = CGetBase [[COPY2]]
   ; TAG-CLEAR-NEXT:   [[CGetLen:%[0-9]+]]:gpr = CGetLen [[COPY2]]
-  ; TAG-CLEAR-NEXT:   [[CGetTag:%[0-9]+]]:gpr = CGetTag [[COPY2]]
   ; TAG-CLEAR-NEXT:   [[CGetSealed:%[0-9]+]]:gpr = CGetSealed [[COPY2]]
   ; TAG-CLEAR-NEXT:   [[CGetOffset:%[0-9]+]]:gpr = CGetOffset [[COPY2]]
   ; TAG-CLEAR-NEXT:   [[PseudoCGetAddr:%[0-9]+]]:gpr = PseudoCGetAddr [[COPY2]]
@@ -302,6 +301,7 @@ body:             |
   ; TAG-CLEAR-NEXT: bb.3.if.then:
   ; TAG-CLEAR-NEXT:   successors: %bb.4(0x80000000)
   ; TAG-CLEAR-NEXT: {{  $}}
+  ; TAG-CLEAR-NEXT:   [[CGetTag:%[0-9]+]]:gpr = CGetTag [[COPY2]]
   ; TAG-CLEAR-NEXT:   [[CSpecialRW:%[0-9]+]]:gpcr = CSpecialRW 0, [[COPY1]]
   ; TAG-CLEAR-NEXT:   CClear 1, 1
   ; TAG-CLEAR-NEXT:   FPClear 1, 1

@@ -66,6 +66,11 @@ def int_cheri_cap_tag_get  :
   Intrinsic<[llvm_i1_ty],
             [llvm_cap_ty],
             [IntrNoMem, IntrWillReturn]>;
+def int_cheri_cap_tag_get_temporal  :
+  ClangBuiltin<"__builtin_cheri_tag_get_temporal">,
+  Intrinsic<[llvm_i1_ty],
+            [llvm_cap_ty],
+            [IntrReadMem, IntrWillReturn]>;
 def int_cheri_cap_sealed_get  :
   ClangBuiltin<"__builtin_cheri_sealed_get">,
   Intrinsic<[llvm_i1_ty],

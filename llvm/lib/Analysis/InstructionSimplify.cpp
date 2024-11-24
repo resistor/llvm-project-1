@@ -6280,6 +6280,7 @@ static Value *simplifyUnaryIntrinsic(Function *F, Value *Op0,
       return X;
     break;
   case Intrinsic::cheri_cap_tag_get:
+  case Intrinsic::cheri_cap_tag_get_temporal:
     if (llvm::cheri::isKnownUntaggedCapability(Op0, &Q.DL))
       return Constant::getNullValue(F->getReturnType());
     break;

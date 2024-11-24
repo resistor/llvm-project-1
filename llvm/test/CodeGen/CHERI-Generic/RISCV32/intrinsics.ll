@@ -13,6 +13,7 @@ declare i32 @llvm.cheri.cap.type.get.i32(i8 addrspace(200)*)
 declare i32 @llvm.cheri.cap.base.get.i32(i8 addrspace(200)*)
 declare i32 @llvm.cheri.cap.length.get.i32(i8 addrspace(200)*)
 declare i1 @llvm.cheri.cap.tag.get(i8 addrspace(200)*)
+declare i1 @llvm.cheri.cap.tag.get.temporal(i8 addrspace(200)*)
 declare i1 @llvm.cheri.cap.sealed.get(i8 addrspace(200)*)
 declare i32 @llvm.cheri.cap.offset.get.i32(i8 addrspace(200)*)
 declare i32 @llvm.cheri.cap.flags.get.i32(i8 addrspace(200)*)
@@ -89,6 +90,22 @@ define i32 @tag_get(i8 addrspace(200)* %cap) nounwind {
   %tag.zext = zext i1 %tag to i32
   ret i32 %tag.zext
 }
+
+define i32 @tag_get_temporal(i8 addrspace(200)* %cap) nounwind {
+; PURECAP-LABEL: tag_get_temporal:
+; PURECAP:       # %bb.0:
+; PURECAP-NEXT:    cgettag a0, ca0
+; PURECAP-NEXT:    cret
+;
+; HYBRID-LABEL: tag_get_temporal:
+; HYBRID:       # %bb.0:
+; HYBRID-NEXT:    cgettag a0, ca0
+; HYBRID-NEXT:    ret
+  %tag = call i1 @llvm.cheri.cap.tag.get.temporal(i8 addrspace(200)* %cap)
+  %tag.zext = zext i1 %tag to i32
+  ret i32 %tag.zext
+}
+
 
 define i32 @sealed_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-LABEL: sealed_get:

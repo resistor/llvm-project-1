@@ -17,6 +17,10 @@ def SDT_RISCVCheriBoolUnary : SDTypeProfile<1, 1, [
   SDTCisInt<0>, SDTCisVT<1, CLenVT>
 ]>;
 
+def SDT_RISCVCheriBoolUnaryChain : SDTypeProfile<2, 2, [
+  SDTCisInt<0>, SDTCisVT<2, CLenVT>
+]>;
+
 def SDT_RISCVCheriBoolBinary : SDTypeProfile<1, 2, [
   SDTCisInt<0>, SDTCisVT<1, CLenVT>, SDTCisVT<2, CLenVT>
 ]>;
@@ -35,7 +39,8 @@ def riscv_cap_tail        : SDNode<"RISCVISD::CAP_TAIL", SDT_RISCVCapCall,
                                    [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue,
                                     SDNPVariadic]>;
 def riscv_cap_tag_get     : SDNode<"RISCVISD::CAP_TAG_GET",
-                                   SDT_RISCVCheriBoolUnary>;
+                                   SDT_RISCVCheriBoolUnaryChain,
+                                   [SDNPHasChain]>;
 def riscv_cap_sealed_get  : SDNode<"RISCVISD::CAP_SEALED_GET",
                                    SDT_RISCVCheriBoolUnary>;
 def riscv_cap_subset_test : SDNode<"RISCVISD::CAP_SUBSET_TEST",
@@ -370,7 +375,8 @@ def CGetPerm   : Cheri_r<0x0, "cgetperm">;
 def CGetType   : Cheri_r<0x1, "cgettype">;
 def CGetBase   : Cheri_r<0x2, "cgetbase">;
 def CGetLen    : Cheri_r<0x3, "cgetlen">;
-def CGetTag    : Cheri_r<0x4, "cgettag">;
+let mayLoad = true in
+  def CGetTag    : Cheri_r<0x4, "cgettag">;
 def CGetSealed : Cheri_r<0x5, "cgetsealed">;
 def CGetOffset : Cheri_r<0x6, "cgetoffset">;
 def CGetFlags  : Cheri_r<0x7, "cgetflags">;
@@ -1280,7 +1286,6 @@ def : PatGpcr<int_cheri_cap_perms_get, CGetPerm>;
 def : PatGpcr<int_cheri_cap_type_get, CGetType>;
 def : PatGpcr<int_cheri_cap_base_get, CGetBase>;
 def : PatGpcr<int_cheri_cap_length_get, CGetLen>;
-def : PatGpcr<riscv_cap_tag_get, CGetTag>;
 def : PatGpcr<riscv_cap_sealed_get, CGetSealed>;
 def : PatGpcr<int_cheri_cap_offset_get, CGetOffset>;
 def : PatGpcr<int_cheri_cap_flags_get, CGetFlags>;

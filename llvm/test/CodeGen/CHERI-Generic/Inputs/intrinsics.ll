@@ -11,6 +11,7 @@ declare iCAPRANGE @llvm.cheri.cap.type.get.iCAPRANGE(i8 addrspace(200)*)
 declare iCAPRANGE @llvm.cheri.cap.base.get.iCAPRANGE(i8 addrspace(200)*)
 declare iCAPRANGE @llvm.cheri.cap.length.get.iCAPRANGE(i8 addrspace(200)*)
 declare i1 @llvm.cheri.cap.tag.get(i8 addrspace(200)*)
+declare i1 @llvm.cheri.cap.tag.temporal(i8 addrspace(200)*)
 declare i1 @llvm.cheri.cap.sealed.get(i8 addrspace(200)*)
 declare iCAPRANGE @llvm.cheri.cap.offset.get.iCAPRANGE(i8 addrspace(200)*)
 declare iCAPRANGE @llvm.cheri.cap.flags.get.iCAPRANGE(i8 addrspace(200)*)
@@ -39,6 +40,12 @@ define iCAPRANGE @length_get(i8 addrspace(200)* %cap) nounwind {
 
 define iCAPRANGE @tag_get(i8 addrspace(200)* %cap) nounwind {
   %tag = call i1 @llvm.cheri.cap.tag.get(i8 addrspace(200)* %cap)
+  %tag.zext = zext i1 %tag to iCAPRANGE
+  ret iCAPRANGE %tag.zext
+}
+
+define iCAPRANGE @tag_get_temporal(i8 addrspace(200)* %cap) nounwind {
+  %tag = call i1 @llvm.cheri.cap.tag.get.temporal(i8 addrspace(200)* %cap)
   %tag.zext = zext i1 %tag to iCAPRANGE
   ret iCAPRANGE %tag.zext
 }

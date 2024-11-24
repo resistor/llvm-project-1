@@ -17,6 +17,9 @@ void standard(void * __capability cap) {
   x = __builtin_cheri_tag_get(cap);
   // RV32IXCHERI: call i1 @llvm.cheri.cap.tag.get
   // RV64IXCHERI: call i1 @llvm.cheri.cap.tag.get
+  x = __builtin_cheri_tag_get_temporal(cap);
+  // RV32IXCHERI: call i1 @llvm.cheri.cap.tag.get.temporal
+  // RV64IXCHERI: call i1 @llvm.cheri.cap.tag.get.temporal
   x = __builtin_cheri_offset_get(cap);
   // RV32IXCHERI: call i32 @llvm.cheri.cap.offset.get.i32
   // RV64IXCHERI: call i64 @llvm.cheri.cap.offset.get.i64

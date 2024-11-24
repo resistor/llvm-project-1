@@ -4505,7 +4505,9 @@ static SDValue emitCToPtrReplacement(SelectionDAG &DAG, const SDLoc &DL,
   // Ideally we would keep the select here and allow follow-up folds to optimize
   // the select depending on available instructions, but the MVT::i1 intrinsic
   // call is optimized poorly, so we expand it manually.
-  SDValue IsTagged = DAG.getNode(RISCVISD::CAP_TAG_GET, DL, XLenVT, Cap);
+  SDVTList VTList = DAG.getVTList(XLenVT, MVT::Other);
+  SDValue IsTagged =
+      DAG.getNode(RISCVISD::CAP_TAG_GET, DL, VTList, Cap, DAG.getEntryNode());
   SDValue Mask = DAG.getNode(ISD::SUB, DL, XLenVT,
                              DAG.getConstant(0, DL, XLenVT), IsTagged);
   // Using EXTRACT_SUBREG instead of getaddr is safe here since the result is
@@ -13574,12 +13576,26 @@ SDValue RISCVTargetLowering::PerformDAGCombine(SDNode *N,
     // Lower to our custom node, but with a truncate back to i1 so we can
     // replace its uses.
     case Intrinsic::cheri_cap_tag_get: {
-      SDValue IntRes =
-          DAG.getNode(RISCVISD::CAP_TAG_GET, DL, XLenVT, N->getOperand(1));
+      SDVTList VTList = DAG.getVTList(XLenVT, MVT::Other);
+      SDValue IntRes = DAG.getNode(RISCVISD::CAP_TAG_GET, DL, VTList,
+                                   N->getOperand(1), DAG.getEntryNode());
+      SDValue Chain = SDValue(IntRes.getNode(), 1);
       IntRes = DAG.getNode(ISD::AssertZext, DL, XLenVT, IntRes,
                            DAG.getValueType(MVT::i1));
-      return DAG.getSetCC(DL, MVT::i1, IntRes, DAG.getConstant(0, DL, XLenVT),
-                          ISD::SETNE);
+      SDValue SetCC = DAG.getSetCC(DL, MVT::i1, IntRes,
+                                   DAG.getConstant(0, DL, XLenVT), ISD::SETNE);
+      return DCI.CombineTo(N, SetCC);
+    }
+    case Intrinsic::cheri_cap_tag_get_temporal: {
+      SDVTList VTList = DAG.getVTList(XLenVT, MVT::Other);
+      SDValue IntRes = DAG.getNode(RISCVISD::CAP_TAG_GET, DL, VTList,
+                                   N->getOperand(2), N->getOperand(0));
+      SDValue Chain = SDValue(IntRes.getNode(), 1);
+      IntRes = DAG.getNode(ISD::AssertZext, DL, XLenVT, IntRes,
+                           DAG.getValueType(MVT::i1));
+      SDValue SetCC = DAG.getSetCC(DL, MVT::i1, IntRes,
+                                   DAG.getConstant(0, DL, XLenVT), ISD::SETNE);
+      return DCI.CombineTo(N, SetCC, Chain);
     }
     case Intrinsic::cheri_cap_sealed_get: {
       SDValue IntRes =

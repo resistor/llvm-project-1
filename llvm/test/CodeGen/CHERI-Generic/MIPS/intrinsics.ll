@@ -13,6 +13,7 @@ declare i64 @llvm.cheri.cap.type.get.i64(i8 addrspace(200)*)
 declare i64 @llvm.cheri.cap.base.get.i64(i8 addrspace(200)*)
 declare i64 @llvm.cheri.cap.length.get.i64(i8 addrspace(200)*)
 declare i1 @llvm.cheri.cap.tag.get(i8 addrspace(200)*)
+declare i1 @llvm.cheri.cap.tag.get.temporal(i8 addrspace(200)*)
 declare i1 @llvm.cheri.cap.sealed.get(i8 addrspace(200)*)
 declare i64 @llvm.cheri.cap.offset.get.i64(i8 addrspace(200)*)
 declare i64 @llvm.cheri.cap.flags.get.i64(i8 addrspace(200)*)
@@ -82,6 +83,21 @@ define i64 @tag_get(i8 addrspace(200)* %cap) nounwind {
 ; PURECAP-NEXT:    cgettag $2, $c3
 ;
 ; HYBRID-LABEL: tag_get:
+; HYBRID:       # %bb.0:
+; HYBRID-NEXT:    jr $ra
+; HYBRID-NEXT:    cgettag $2, $c3
+  %tag = call i1 @llvm.cheri.cap.tag.get(i8 addrspace(200)* %cap)
+  %tag.zext = zext i1 %tag to i64
+  ret i64 %tag.zext
+}
+
+define i64 @tag_get_temporal(i8 addrspace(200)* %cap) nounwind {
+; PURECAP-LABEL: tag_get_temporal:
+; PURECAP:       # %bb.0:
+; PURECAP-NEXT:    cjr $c17
+; PURECAP-NEXT:    cgettag $2, $c3
+;
+; HYBRID-LABEL: tag_get_temporal:
 ; HYBRID:       # %bb.0:
 ; HYBRID-NEXT:    jr $ra
 ; HYBRID-NEXT:    cgettag $2, $c3

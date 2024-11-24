@@ -27,8 +27,11 @@
 #define cheri_offset_set(x, y) __builtin_cheri_offset_set((x), (y))
 #define cheri_tag_clear(x) __builtin_cheri_tag_clear(x)
 #define cheri_tag_get(x) __builtin_cheri_tag_get(x)
+#define cheri_tag_get_temporal(x) __builtin_cheri_tag_get_temporal(x)
 #define cheri_is_valid(x) __builtin_cheri_tag_get(x)
+#define cheri_is_valid_temporal(x) __builtin_cheri_tag_get_temporal(x)
 #define cheri_is_invalid(x) (!__builtin_cheri_tag_get(x))
+#define cheri_is_invalid_temporal(x) (!__builtin_cheri_tag_get_temporal(x))
 #define cheri_is_equal_exact(x, y) __builtin_cheri_equal_exact((x), (y))
 #define cheri_is_subset(x, y) __builtin_cheri_subset_test((x), (y))
 

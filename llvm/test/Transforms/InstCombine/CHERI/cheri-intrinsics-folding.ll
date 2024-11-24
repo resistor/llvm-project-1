@@ -19,6 +19,7 @@ declare i64 @llvm.cheri.cap.flags.get.i64(ptr addrspace(200)) addrspace(200)
 declare i64 @llvm.cheri.cap.type.get.i64(ptr addrspace(200)) addrspace(200)
 declare i1 @llvm.cheri.cap.sealed.get(ptr addrspace(200)) addrspace(200)
 declare i1 @llvm.cheri.cap.tag.get(ptr addrspace(200)) addrspace(200)
+declare i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200)) addrspace(200)
 
 define i64 @null_get_offset() addrspace(200) nounwind {
   %ret = tail call i64 @llvm.cheri.cap.offset.get.i64(ptr addrspace(200) null)
@@ -68,6 +69,14 @@ define i64 @null_get_tag() addrspace(200) nounwind {
   %ret.ext = zext i1 %ret to i64
   ret i64 %ret.ext
   ; CHECK-LABEL: @null_get_tag()
+  ; CHECK-NEXT: ret i64 0
+}
+
+define i64 @null_get_tag_temporal() addrspace(200) nounwind {
+  %ret = tail call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) null)
+  %ret.ext = zext i1 %ret to i64
+  ret i64 %ret.ext
+  ; CHECK-LABEL: @null_get_tag_temporal()
   ; CHECK-NEXT: ret i64 0
 }
 

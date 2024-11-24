@@ -33,6 +33,7 @@ void test_good(Cap x) {
   static_assert(__is_same(decltype(__builtin_cheri_subset_test(x, x)), bool), "");
   static_assert(__is_same(decltype(__builtin_cheri_tag_clear(x)), T), "");
   static_assert(__is_same(decltype(__builtin_cheri_tag_get(x)), bool), "");
+  static_assert(__is_same(decltype(__builtin_cheri_tag_get_temporal(x)), bool), "");
   static_assert(__is_same(decltype(__builtin_cheri_type_get(x)), long), "");
   static_assert(__is_same(decltype(__builtin_cheri_unseal(x, nullptr)), T), "");
   static_assert(__is_same(decltype(__builtin_cheri_conditional_seal(x, nullptr)), T), "");
@@ -273,6 +274,7 @@ void test_bad() {
   (void)__builtin_cheri_subset_test(x, x);      // expected-error{{operand of type 'long' where capability is required}}
   (void)__builtin_cheri_tag_clear(x);           // expected-error{{operand of type 'long' where capability is required}}
   (void)__builtin_cheri_tag_get(x);             // expected-error{{operand of type 'long' where capability is required}}
+  (void)__builtin_cheri_tag_get_temporal(x);    // expected-error{{operand of type 'long' where capability is required}}
   (void)__builtin_cheri_type_get(x);            // expected-error{{operand of type 'long' where capability is required}}
   (void)__builtin_cheri_unseal(x, NULL);        // expected-error{{operand of type 'long' where capability is required}}
 
@@ -297,6 +299,7 @@ void test_bad() {
   (void)__builtin_cheri_subset_test(123, 123);    // expected-error{{operand of type 'int' where capability is required}}
   (void)__builtin_cheri_tag_clear(123);           // expected-error{{operand of type 'int' where capability is required}}
   (void)__builtin_cheri_tag_get(123);             // expected-error{{operand of type 'int' where capability is required}}
+  (void)__builtin_cheri_tag_get_temporal(123);    // expected-error{{operand of type 'int' where capability is required}}
   (void)__builtin_cheri_type_get(123);            // expected-error{{operand of type 'int' where capability is required}}
   (void)__builtin_cheri_unseal(123, NULL);        // expected-error{{operand of type 'int' where capability is required}}
   // or floating-point ones
@@ -320,6 +323,7 @@ void test_bad() {
   (void)__builtin_cheri_subset_test(1.0f, 1.0f);   // expected-error{{operand of type 'float' where capability is required}}
   (void)__builtin_cheri_tag_clear(1.0f);           // expected-error{{operand of type 'float' where capability is required}}
   (void)__builtin_cheri_tag_get(1.0f);             // expected-error{{operand of type 'float' where capability is required}}
+  (void)__builtin_cheri_tag_get_temporal(1.0f);    // expected-error{{operand of type 'float' where capability is required}}
   (void)__builtin_cheri_type_get(1.0f);            // expected-error{{operand of type 'float' where capability is required}}
   (void)__builtin_cheri_unseal(1.0f, NULL);        // expected-error{{operand of type 'float' where capability is required}}
 }
