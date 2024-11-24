@@ -30,6 +30,9 @@ long long test(void* __capability foo)
   x &= __builtin_cheri_tag_get(foo);
   // CHECK: call i1 @llvm.cheri.cap.tag.get
   // ASM: cgettag ${{[0-9]+}}, $c{{[0-9]+}}
+  x &= __builtin_cheri_tag_get_temporal(foo);
+  // CHECK: call i1 @llvm.cheri.cap.tag.get
+  // ASM: cgettag ${{[0-9]+}}, $c{{[0-9]+}}
   x &= __builtin_cheri_offset_get(foo);
   // CHECK: call i64 @llvm.cheri.cap.offset.get.i64
   // ASM: cgetoffset ${{[0-9]+}}, $c{{[0-9]+}}

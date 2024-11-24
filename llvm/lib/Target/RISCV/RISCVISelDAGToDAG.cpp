@@ -1367,6 +1367,12 @@ void RISCVDAGToDAGISel::Select(SDNode *Node) {
       return;
     break;
   }
+  case RISCVISD::CAP_TAG_GET: {
+    ReplaceNode(Node, CurDAG->getMachineNode(
+                          RISCV::CGetTag, DL, Node->getVTList(),
+                          {Node->getOperand(0), Node->getOperand(1)}));
+    return;
+  }
   case ISD::INTRINSIC_WO_CHAIN: {
     unsigned IntNo = Node->getConstantOperandVal(0);
     switch (IntNo) {

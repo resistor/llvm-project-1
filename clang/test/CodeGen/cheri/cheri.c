@@ -5,7 +5,6 @@
 #define static
 #define inline 
 #include <cheri.h>
-
 // PTRS: define dso_local i32 @cheri_length_get(ptr nocapture noundef readnone
 // PTRS: ret i32 -1
 // PTRS: define dso_local i32 @cheri_base_get(ptr nocapture noundef readnone
@@ -25,6 +24,8 @@
 // PTRS: define dso_local ptr @cheri_flags_set(ptr noundef readnone returned{{( %.+)?}}, i16 noundef zeroext
 // PTRS: ret ptr
 // PTRS: define dso_local zeroext i1 @cheri_tag_get(ptr nocapture noundef readnone
+// PTRS: ret i1 false
+// PTRS: define dso_local zeroext i1 @cheri_tag_get_temporal(ptr nocapture noundef readnone
 // PTRS: ret i1 false
 // PTRS: define dso_local zeroext i1 @cheri_sealed_get(ptr nocapture noundef readnone
 // PTRS: ret i1 false
@@ -70,6 +71,8 @@
 // CAPS: call ptr addrspace(200) @llvm.cheri.cap.flags.set.i64(ptr addrspace(200){{( %.+)?}}, i64
 // CAPS: define dso_local zeroext i1 @cheri_tag_get(ptr addrspace(200) noundef readnone
 // CAPS: call i1 @llvm.cheri.cap.tag.get(ptr addrspace(200)
+// CAPS: define dso_local zeroext i1 @cheri_tag_get_temporal(ptr addrspace(200) noundef readonly
+// CAPS: call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200)
 // CAPS: define dso_local zeroext i1 @cheri_sealed_get(ptr addrspace(200) noundef readnone
 // CAPS: call i1 @llvm.cheri.cap.sealed.get(ptr addrspace(200)
 // CAPS: define dso_local ptr addrspace(200) @cheri_offset_increment(ptr addrspace(200) noundef readnone{{( %.+)?}}, i64 noundef signext

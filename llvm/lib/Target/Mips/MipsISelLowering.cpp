@@ -570,6 +570,7 @@ MipsTargetLowering::MipsTargetLowering(const MipsTargetMachine &TM,
   if (Subtarget.isCheri()) {
     // We also fold Incoffsets to andaddr if possible
     setTargetDAGCombine(ISD::INTRINSIC_WO_CHAIN);
+    setTargetDAGCombine(ISD::INTRINSIC_W_CHAIN);
     setTargetDAGCombine(ISD::PTRADD);
   }
 
@@ -1484,6 +1485,22 @@ SDValue  MipsTargetLowering::PerformDAGCombine(SDNode *N, DAGCombinerInfo &DCI)
     return performCIncOffsetToCandAddrCombine(N, DAG, DCI, Subtarget);
   case ISD::INTRINSIC_WO_CHAIN:
     return performINTRINSIC_WO_CHAINCombine(N, DAG, DCI, Subtarget);
+  case ISD::INTRINSIC_W_CHAIN: {
+    unsigned IID = cast<ConstantSDNode>(N->getOperand(1))->getZExtValue();
+    if (IID == Intrinsic::cheri_cap_tag_get_temporal) {
+      SDLoc DL(N);
+      EVT VT = Subtarget.isGP64bit() ? MVT::i64 : MVT::i32;
+      SDValue IntRes =
+          DAG.getNode(MipsISD::CapTagGet, DL, VT, N->getOperand(2));
+      IntRes = DAG.getNode(ISD::AssertZext, DL, VT, IntRes,
+                           DAG.getValueType(MVT::i1));
+      IntRes = DAG.getSetCC(DL, MVT::i1, IntRes, DAG.getConstant(0, DL, VT),
+                            ISD::SETNE);
+      DCI.CombineTo(N, {IntRes, N->getOperand(0)});
+      return SDValue();
+    }
+    break;
+  }
   }
 
   return SDValue();

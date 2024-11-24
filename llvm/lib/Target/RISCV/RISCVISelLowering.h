@@ -138,7 +138,7 @@ enum NodeType : unsigned {
   /// CHERIoT cross-library call.
   CAP_LIB_CALL,
   CAP_TAIL,
-  /// Legalised int_cheri_cap_tag_get
+  /// Legalised int_cheri_cap_tag_get[_temporal]
   CAP_TAG_GET,
   /// Legalised int_cheri_cap_sealed_get
   CAP_SEALED_GET,

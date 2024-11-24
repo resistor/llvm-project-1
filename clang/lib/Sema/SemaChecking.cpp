@@ -2714,6 +2714,7 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
   case Builtin::BI__builtin_cheri_perms_get:
   case Builtin::BI__builtin_cheri_sealed_get:
   case Builtin::BI__builtin_cheri_tag_get:
+  case Builtin::BI__builtin_cheri_tag_get_temporal:
   case Builtin::BI__builtin_cheri_type_get: {
     // The CHERI accessors should accept both capability pointer types and
     // (u)intcap_t arguments.

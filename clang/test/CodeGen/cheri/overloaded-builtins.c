@@ -35,7 +35,8 @@ typedef _Bool bool;
   size_t result26 = __builtin_cheri_high_get(x);                               \
   T result27 = __builtin_cheri_high_set(x, 1);                                 \
   __builtin_cheri_perms_check(x, 1);                                           \
-  __builtin_cheri_type_check(x, x2);
+  __builtin_cheri_type_check(x, x2);                                           \
+  bool result28 = __builtin_cheri_tag_get_temporal(x);
 
 // PURECAP-LABEL: define {{[^@]+}}@test_void_ptr
 // PURECAP-SAME: (ptr addrspace(200) noundef [[ARG:%.*]], ptr addrspace(200) noundef [[ARG2:%.*]]) addrspace(200) #[[ATTR0:[0-9]+]] {
@@ -73,6 +74,8 @@ typedef _Bool bool;
 // PURECAP-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[ARG]], i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) [[ARG]], i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) [[ARG]], ptr addrspace(200) [[ARG2]])
+// PURECAP-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) [[ARG]])
+// PURECAP-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // PURECAP-NEXT:    ret void
 //
 // HYBRID-LABEL: define {{[^@]+}}@test_void_ptr
@@ -111,6 +114,8 @@ typedef _Bool bool;
 // HYBRID-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[ARG]], i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) [[ARG]], i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) [[ARG]], ptr addrspace(200) [[ARG2]])
+// HYBRID-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) [[ARG]])
+// HYBRID-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // HYBRID-NEXT:    ret void
 //
 void test_void_ptr(void *__capability arg, void *__capability arg2) {
@@ -153,6 +158,8 @@ void test_void_ptr(void *__capability arg, void *__capability arg2) {
 // PURECAP-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[ARG]], i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) [[ARG]], i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) [[ARG]], ptr addrspace(200) [[ARG2]])
+// PURECAP-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) [[ARG]])
+// PURECAP-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // PURECAP-NEXT:    ret void
 //
 // HYBRID-LABEL: define {{[^@]+}}@test_const_char_ptr
@@ -191,6 +198,8 @@ void test_void_ptr(void *__capability arg, void *__capability arg2) {
 // HYBRID-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[ARG]], i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) [[ARG]], i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) [[ARG]], ptr addrspace(200) [[ARG2]])
+// HYBRID-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) [[ARG]])
+// HYBRID-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // HYBRID-NEXT:    ret void
 //
 void test_const_char_ptr(const char *__capability arg, const char *__capability arg2) {
@@ -233,6 +242,8 @@ void test_const_char_ptr(const char *__capability arg, const char *__capability 
 // PURECAP-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[ARG]], i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) [[ARG]], i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) [[ARG]], ptr addrspace(200) [[ARG2]])
+// PURECAP-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) [[ARG]])
+// PURECAP-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // PURECAP-NEXT:    ret void
 //
 // HYBRID-LABEL: define {{[^@]+}}@test_long_ptr
@@ -271,6 +282,8 @@ void test_const_char_ptr(const char *__capability arg, const char *__capability 
 // HYBRID-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[ARG]], i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) [[ARG]], i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) [[ARG]], ptr addrspace(200) [[ARG2]])
+// HYBRID-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) [[ARG]])
+// HYBRID-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // HYBRID-NEXT:    ret void
 //
 void test_long_ptr(long *__capability arg, long *__capability arg2) {
@@ -313,6 +326,8 @@ void test_long_ptr(long *__capability arg, long *__capability arg2) {
 // PURECAP-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[ARG]], i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) [[ARG]], i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) [[ARG]], ptr addrspace(200) [[ARG2]])
+// PURECAP-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) [[ARG]])
+// PURECAP-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // PURECAP-NEXT:    ret void
 //
 // HYBRID-LABEL: define {{[^@]+}}@test_uintcap_t
@@ -351,6 +366,8 @@ void test_long_ptr(long *__capability arg, long *__capability arg2) {
 // HYBRID-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) [[ARG]], i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) [[ARG]], i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) [[ARG]], ptr addrspace(200) [[ARG2]])
+// HYBRID-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) [[ARG]])
+// HYBRID-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // HYBRID-NEXT:    ret void
 //
 void test_uintcap_t(__uintcap_t arg, __uintcap_t arg2) {
@@ -390,6 +407,8 @@ void test_uintcap_t(__uintcap_t arg, __uintcap_t arg2) {
 // PURECAP-NEXT:    [[TMP23:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) null, i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) null, i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) null, ptr addrspace(200) null)
+// PURECAP-NEXT:    [[TMP24:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) null)
+// PURECAP-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP24]] to i8
 // PURECAP-NEXT:    ret void
 //
 // HYBRID-LABEL: define {{[^@]+}}@test_null_constant
@@ -425,6 +444,8 @@ void test_uintcap_t(__uintcap_t arg, __uintcap_t arg2) {
 // HYBRID-NEXT:    [[TMP23:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) null, i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) null, i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) null, ptr addrspace(200) null)
+// HYBRID-NEXT:    [[TMP24:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) null)
+// HYBRID-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP24]] to i8
 // HYBRID-NEXT:    ret void
 //
 void test_null_constant(__uintcap_t arg) {
@@ -464,6 +485,8 @@ void test_null_constant(__uintcap_t arg) {
 // PURECAP-NEXT:    [[TMP23:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) null, i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) null, i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) null, ptr addrspace(200) null)
+// PURECAP-NEXT:    [[TMP24:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) null)
+// PURECAP-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP24]] to i8
 // PURECAP-NEXT:    ret void
 //
 // HYBRID-LABEL: define {{[^@]+}}@test_null_int_ptr
@@ -499,6 +522,8 @@ void test_null_constant(__uintcap_t arg) {
 // HYBRID-NEXT:    [[TMP23:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) null, i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) null, i64 1)
 // HYBRID-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) null, ptr addrspace(200) null)
+// HYBRID-NEXT:    [[TMP24:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) null)
+// HYBRID-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP24]] to i8
 // HYBRID-NEXT:    ret void
 //
 void test_null_int_ptr(__uintcap_t arg) {
@@ -625,6 +650,8 @@ static char global_buffer2[32];
 // PURECAP-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) @global_buffer, i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) @global_buffer, i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) @global_buffer, ptr addrspace(200) @global_buffer2)
+// PURECAP-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) @global_buffer)
+// PURECAP-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // PURECAP-NEXT:    ret void
 //
 void test_array(void) {
@@ -668,6 +695,8 @@ typedef void (*__capability fnptr_t)(void);
 // PURECAP-NEXT:    [[TMP25:%.*]] = call ptr addrspace(200) @llvm.cheri.cap.high.set.i64(ptr addrspace(200) @test_function, i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.perms.check.i64(ptr addrspace(200) @test_function, i64 1)
 // PURECAP-NEXT:    call void @llvm.cheri.cap.type.check(ptr addrspace(200) @test_function, ptr addrspace(200) @test_array)
+// PURECAP-NEXT:    [[TMP26:%.*]] = call i1 @llvm.cheri.cap.tag.get.temporal(ptr addrspace(200) @test_function)
+// PURECAP-NEXT:    [[FROMBOOL4:%.*]] = zext i1 [[TMP26]] to i8
 // PURECAP-NEXT:    ret void
 //
 void test_function(void) {

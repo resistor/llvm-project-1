@@ -80,6 +80,7 @@ __CHERI_GET(type, cheri_type_t, _get, 0)
 __CHERI_ACCESSOR(perms, cheri_perms_t, _and, _get, 0)
 __CHERI_ACCESSOR(flags, cheri_flags_t, _set, _get, 0)
 __CHERI_GET(tag, __cheri_bool, _get, 0)
+__CHERI_GET(tag, __cheri_bool, _get_temporal, 0)
 __CHERI_GET(sealed, __cheri_bool, _get, 0)
 
 static inline
