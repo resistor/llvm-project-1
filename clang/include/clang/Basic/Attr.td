@@ -2482,7 +2482,7 @@ def CHERICompartmentName : DeclOrTypeAttr {
 def CHERILibCall : DeclOrTypeAttr {
   let Spellings = [GNU<"cheri_libcall">];
   let Documentation = [Undocumented];
-  let Subjects = SubjectList<[Function], ErrorDiag>;
+  let Subjects = SubjectList<[Function, FunctionPointer], ErrorDiag>;
 }
 
 
