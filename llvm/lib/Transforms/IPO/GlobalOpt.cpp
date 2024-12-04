@@ -1133,16 +1133,8 @@ static bool
 optimizeOnceStoredGlobal(GlobalVariable *GV, Value *StoredOnceVal,
                          const DataLayout &DL,
                          function_ref<TargetLibraryInfo &(Function &)> GetTLI) {
-  // Address space casts can have run-time behaviour, so don't eliminate the
-  // store if it involves an AS cast.
-  Value *StoredOnceBaseVal = StoredOnceVal->stripPointerCasts();
-  if (StoredOnceVal->getType()->isPointerTy() &&
-      (StoredOnceVal->getType()->getPointerAddressSpace() !=
-       StoredOnceBaseVal->getType()->getPointerAddressSpace()))
-    return false;
-
   // Ignore no-op GEPs and bitcasts.
-  StoredOnceVal = StoredOnceBaseVal;
+  StoredOnceVal = StoredOnceVal->stripPointerCasts();
 
   // If we are dealing with a pointer global that is initialized to null and
   // only has one (non-null) value stored into it, then we can optimize any
