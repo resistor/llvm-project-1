@@ -793,7 +793,8 @@ Value *LibCallSimplifier::optimizeStrLCpy(CallInst *CI, IRBuilderBase &B) {
   // Transform strlcpy(D, S, N) to memcpy(D, S, N') where N' is the lower
   // bound on strlen(S) + 1 and N, optionally followed by a nul store to
   // D[N' - 1] if necessary.
-  CallInst *NewCI = B.CreateMemCpy(Dst, Align(1), Src, Align(1), NBytes);
+  CallInst *NewCI = B.CreateMemCpy(Dst, Align(1), Src, Align(1), NBytes,
+                                   PreserveCheriTags::Unnecessary);
   mergeAttributesAndFlags(NewCI, *CI);
 
   if (!NulTerm) {
