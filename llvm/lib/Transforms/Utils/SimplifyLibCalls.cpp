@@ -369,11 +369,7 @@ Value *LibCallSimplifier::emitStrLenMemCpy(Value *Src, Value *Dst, uint64_t Len,
 
   // We have enough information to now generate the memcpy call to do the
   // concatenation for us.  Make a memcpy to copy the nul byte with align = 1.
-  B.CreateMemCpy(CpyDst, Align(1), Src, Align(1),
-                 ConstantInt::get(
-                     DL.getIntPtrType(Src->getContext(),
-                                      Src->getType()->getPointerAddressSpace()),
-                     Len + 1),
+  B.CreateMemCpy(CpyDst, Align(1), Src, Align(1), Len + 1,
                  PreserveCheriTags::Unnecessary);
   return Dst;
 }
@@ -697,10 +693,8 @@ Value *LibCallSimplifier::optimizeStrCpy(CallInst *CI, IRBuilderBase &B) {
 
   // We have enough information to now generate the memcpy call to do the
   // copy for us.  Make a memcpy to copy the nul byte with align = 1.
-  CallInst *NewCI =
-      B.CreateMemCpy(Dst, Align(1), Src, Align(1),
-                     ConstantInt::get(DL.getIndexType(Dst->getType()), Len),
-                     PreserveCheriTags::Unnecessary);
+  CallInst *NewCI = B.CreateMemCpy(Dst, Align(1), Src, Align(1), Len,
+                                   PreserveCheriTags::Unnecessary);
   mergeAttributesAndFlags(NewCI, *CI);
   return Dst;
 }
@@ -796,13 +790,10 @@ Value *LibCallSimplifier::optimizeStrLCpy(CallInst *CI, IRBuilderBase &B) {
     return ConstantInt::get(CI->getType(), 0);
   }
 
-  Function *Callee = CI->getCalledFunction();
-  Type *PT = Callee->getFunctionType()->getParamType(0);
   // Transform strlcpy(D, S, N) to memcpy(D, S, N') where N' is the lower
   // bound on strlen(S) + 1 and N, optionally followed by a nul store to
   // D[N' - 1] if necessary.
-  CallInst *NewCI = B.CreateMemCpy(Dst, Align(1), Src, Align(1),
-                        ConstantInt::get(DL.getIntPtrType(PT), NBytes));
+  CallInst *NewCI = B.CreateMemCpy(Dst, Align(1), Src, Align(1), NBytes);
   mergeAttributesAndFlags(NewCI, *CI);
 
   if (!NulTerm) {
@@ -821,7 +812,6 @@ Value *LibCallSimplifier::optimizeStrLCpy(CallInst *CI, IRBuilderBase &B) {
 // otherwise.
 Value *LibCallSimplifier::optimizeStringNCpy(CallInst *CI, bool RetEnd,
                                              IRBuilderBase &B) {
-  Function *Callee = CI->getCalledFunction();
   Value *Dst = CI->getArgOperand(0);
   Value *Src = CI->getArgOperand(1);
   Value *Size = CI->getArgOperand(2);
@@ -897,11 +887,9 @@ Value *LibCallSimplifier::optimizeStringNCpy(CallInst *CI, bool RetEnd,
     Src = B.CreateGlobalString(SrcStr, "str");
   }
 
-  Type *PT = Callee->getFunctionType()->getParamType(0);
   // st{p,r}ncpy(D, S, N) -> memcpy(align 1 D, align 1 S, N) when both
   // S and N are constant.
-  CallInst *NewCI = B.CreateMemCpy(Dst, Align(1), Src, Align(1),
-                                   ConstantInt::get(DL.getIntPtrType(PT), N),
+  CallInst *NewCI = B.CreateMemCpy(Dst, Align(1), Src, Align(1), N,
                                    PreserveCheriTags::Unnecessary);
   mergeAttributesAndFlags(NewCI, *CI);
 
@@ -3061,14 +3049,9 @@ Value *LibCallSimplifier::optimizeSPrintFString(CallInst *CI,
       return nullptr; // we found a format specifier, bail out.
 
     // sprintf(str, fmt) -> llvm.memcpy(align 1 str, align 1 fmt, strlen(fmt)+1)
-    B.CreateMemCpy(
-        Dest, Align(1), CI->getArgOperand(1), Align(1),
-        ConstantInt::get(
-            DL.getIntPtrType(
-                CI->getContext(),
-                CI->getArgOperand(0)->getType()->getPointerAddressSpace()),
-            FormatStr.size() + 1), // Copy the null byte.
-        PreserveCheriTags::Unnecessary);
+    B.CreateMemCpy(Dest, Align(1), CI->getArgOperand(1), Align(1),
+                   FormatStr.size() + 1, // Copy the null byte.
+                   PreserveCheriTags::Unnecessary);
     return ConstantInt::get(CI->getType(), FormatStr.size());
   }
 
@@ -3205,15 +3188,8 @@ Value *LibCallSimplifier::emitSnPrintfMemCpy(CallInst *CI, Value *StrArg,
   Value *DstArg = CI->getArgOperand(0);
   if (NCopy && StrArg)
     // Transform the call to lvm.memcpy(dst, fmt, N).
-    copyFlags(
-        *CI,
-        B.CreateMemCpy(
-            DstArg, Align(1), StrArg, Align(1),
-            ConstantInt::get(
-                DL.getIntPtrType(CI->getContext(),
-                                 DstArg->getType()->getPointerAddressSpace()),
-                NCopy),
-            PreserveCheriTags::Unnecessary));
+    copyFlags(*CI, B.CreateMemCpy(DstArg, Align(1), StrArg, Align(1), NCopy,
+                                  PreserveCheriTags::Unnecessary));
 
   if (N > Str.size())
     // Return early when the whole format string, including the final nul,

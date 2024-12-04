@@ -26,7 +26,7 @@ declare i32 @sprintf(ptr, ptr, ...)
 
 define void @test_simplify1(ptr %dst) {
 ; CHECK-LABEL: @test_simplify1(
-; CHECK-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr noundef nonnull align 1 dereferenceable(13) [[DST:%.*]], ptr noundef nonnull align 1 dereferenceable(13) @hello_world, i32 13, i1 false)
+; CHECK-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr noundef nonnull align 1 dereferenceable(13) [[DST:%.*]], ptr noundef nonnull align 1 dereferenceable(13) @hello_world, i64 13, i1 false)
 ; CHECK-NEXT:    ret void
 ;
   call i32 (ptr, ptr, ...) @sprintf(ptr %dst, ptr @hello_world)
