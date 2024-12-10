@@ -2827,7 +2827,7 @@ int llvm::getCallsiteCost(const CallBase &Call, const DataLayout &DL) {
       PointerType *PTy = cast<PointerType>(Call.getArgOperand(I)->getType());
       unsigned TypeSize = DL.getTypeSizeInBits(Call.getParamByValType(I));
       unsigned AS = PTy->getAddressSpace();
-      unsigned PointerSize = DL.getPointerAddrSizeInBits(AS);
+      unsigned PointerSize = DL.getPointerSizeInBits(AS);
       // Ceiling division.
       unsigned NumStores = (TypeSize + PointerSize - 1) / PointerSize;
 
