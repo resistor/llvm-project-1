@@ -10535,8 +10535,11 @@ QualType ASTContext::mergeFunctionTypes(QualType lhs, QualType rhs,
   FunctionType::ExtInfo rbaseInfo = rbase->getExtInfo();
 
   // Compatible functions must have compatible calling conventions
-  if (lbaseInfo.getCC() != rbaseInfo.getCC())
-    return {};
+  if (lbaseInfo.getCC() != rbaseInfo.getCC()) {
+    // cheriot: Allow decay of CC_CHERI_LibCall to CC_C.
+    if (!(lbaseInfo.getCC() == CC_C && rbaseInfo.getCC() == CC_CHERILibCall))
+      return {};
+  }
 
   // Regparm is part of the calling convention.
   if (lbaseInfo.getHasRegParm() != rbaseInfo.getHasRegParm())

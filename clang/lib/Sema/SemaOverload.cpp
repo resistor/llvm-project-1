@@ -1684,6 +1684,13 @@ bool Sema::IsFunctionConversion(QualType FromType, QualType ToType,
 
   bool Changed = false;
 
+  // Drop CC_CHERILibCall CCif not present in target type.
+  if (FromEInfo.getCC() == CC_CHERILibCall && ToEInfo.getCC() == CC_C) {
+    FromFn =
+        Context.adjustFunctionType(FromFn, FromEInfo.withCallingConv(CC_C));
+    Changed = true;
+  }
+
   // Drop 'noreturn' if not present in target type.
   if (FromEInfo.getNoReturn() && !ToEInfo.getNoReturn()) {
     FromFn = Context.adjustFunctionType(FromFn, FromEInfo.withNoReturn(false));
