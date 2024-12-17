@@ -2390,9 +2390,6 @@ static void handleCHERIMethodSuffix(Sema &S, Decl *D, const ParsedAttr &Attr) {
 
 static void handleCHERICompartmentName(Sema &S, Decl *D, const ParsedAttr &Attr,
                                        Sema::DeclAttributeLocation DAL) {
-  if (DAL != Sema::DAL_DeclSpec && DAL != Sema::DAL_Unspecified)
-    return;
-
   // cheri_compartment is both:
   //
   // * a Declaration attribute: marks the function as a compartment entry point

@@ -713,12 +713,13 @@ static void CheckFallThroughForBody(Sema &S, const Decl *D, const Stmt *Body,
       else if (!ReturnsVoid)
         EmitDiag(RBrace, CD.diag_MaybeFallThrough_ReturnsNonVoid);
 
-      if (HasCHERICompartmentName)
+      if (HasCHERICompartmentName) {
         if (!ReturnsVoid)
           S.Diag(RBrace, diag::warn_cheri_compartment_return_void_or_falloff);
         else
           S.Diag(RBrace, diag::warn_cheri_compartment_return_void_or_falloff)
               << FixItHint::CreateInsertion(RBrace, "return 0;");
+      }
       break;
     case AlwaysFallThrough:
       if (HasNoReturn)
@@ -726,12 +727,13 @@ static void CheckFallThroughForBody(Sema &S, const Decl *D, const Stmt *Body,
       else if (!ReturnsVoid)
         EmitDiag(RBrace, CD.diag_AlwaysFallThrough_ReturnsNonVoid);
 
-      if (HasCHERICompartmentName)
+      if (HasCHERICompartmentName) {
         if (!ReturnsVoid)
           S.Diag(RBrace, diag::warn_cheri_compartment_return_void_or_falloff);
         else
           S.Diag(RBrace, diag::warn_cheri_compartment_return_void_or_falloff)
               << FixItHint::CreateInsertion(RBrace, "return 0;");
+      }
       break;
     case NeverFallThroughOrReturn:
       if (ReturnsVoid && !HasNoReturn && CD.diag_NeverFallThroughOrReturn) {
