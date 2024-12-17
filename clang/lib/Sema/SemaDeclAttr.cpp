@@ -2414,9 +2414,13 @@ static void handleCHERICompartmentName(Sema &S, Decl *D, const ParsedAttr &Attr,
       S.Diag(SR.getBegin(), diag::note_cheri_compartment_void_return_type)
           << FixItHint::CreateReplacement(SR, "int");
     }
-  } else
-    D->addAttr(::new (S.Context) WarnUnusedResultAttr(
-        S.Context, Attr, "CHERI compartment call"));
+  } else {
+    if (!S.Diags.isIgnored(diag::warn_cheri_compartment_void_return_type,
+                           LiteralLoc)) {
+      D->addAttr(::new (S.Context) WarnUnusedResultAttr(
+          S.Context, Attr, "CHERI compartment call"));
+    }
+  }
 
   D->addAttr(::new (S.Context) CHERICompartmentNameAttr(S.Context, Attr, Str));
 }
