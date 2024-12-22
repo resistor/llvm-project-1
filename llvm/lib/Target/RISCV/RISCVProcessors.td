@@ -210,4 +210,5 @@ def CHERIOT : RISCVProcessorModel<"cheriot",
                                     FeatureCheri,
                                     FeatureCapMode,
                                     FeatureStdExtC,
-                                    FeatureStdExtM]>;
+                                    FeatureStdExtM,
+                                    FeatureUnalignedScalarMem]>;
