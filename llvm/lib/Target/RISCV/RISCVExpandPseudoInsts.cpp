@@ -240,7 +240,8 @@ MachineBasicBlock *RISCVExpandPseudo::insertLoadOfImportTable(
   const StringRef ImportName = Fn->getName();
   // We can hit this code path if we need to do a library-style import
   // for a local exported function.
-  const bool IsLibrary = Fn->getCallingConv() == CallingConv::CHERI_LibCall;
+  CallingConv::ID CC = Fn->getCallingConv();
+  bool IsLibrary = CC == CallingConv::CHERI_LibCall;
   const StringRef CompartmentName =
       IsLibrary ? "libcalls"
                 : Fn->getFnAttribute("cheri-compartment").getValueAsString();
@@ -572,7 +573,8 @@ bool RISCVExpandPseudo::expandCapLoadLocalCap(
     if ((getInterruptStatus(*Fn) != Interrupts::Inherit) ||
         (CC == CallingConv::CHERI_CCall) ||
         (CC == CallingConv::CHERI_CCallee)) {
-      insertLoadOfImportTable(MBB, MBBI, Fn, MBBI->getOperand(0).getReg());
+      insertLoadOfImportTable(MBB, MBBI, Fn, MBBI->getOperand(0).getReg(),
+        /*TreatAsLibrary*/CC == CallingConv::C);
       NextMBBI = MBB.end();
       MBBI->eraseFromParent();
       return true;
