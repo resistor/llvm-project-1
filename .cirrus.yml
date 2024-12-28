@@ -1,11 +1,16 @@
+gcp_credentials: ENCRYPTED[cf2b73ff299c7afb7adf7a219c948781a360b3c629b4a5583133d855a5563c7e55514c86f995b41967f3f8cb9fa49673]
 pr_task:
   name: Build and test PR
   skip: $CIRRUS_PR == ""
   timeout_in: 240m
-  container:
-    image: ubuntu:24.04
-    cpu: 8
-    memory: 16G
+  gce_instance:
+    image_project: ubuntu-os-cloud
+    image_family: ubuntu-2404-lts-arm64
+    architecture: arm64
+    zone: us-central1-a
+    type: c4a-standard-8
+    disk: 60
+    preemptible: true
   env:
     NINJA_STATUS: '%p [%f:%s/%t] %o/s, %es'
     CIRRUS_CLONE_DEPTH: 1
