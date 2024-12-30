@@ -3,7 +3,7 @@ pr_task:
   name: Build and test PR
   skip: $CIRRUS_PR == ""
   timeout_in: 240m
-  gce_instance:
+  gce_instance: &arm_vm
     image_project: ubuntu-os-cloud
     image_family: ubuntu-2404-lts-arm64
     architecture: arm64
@@ -42,10 +42,12 @@ x86_release_task:
   only_if: ($CIRRUS_PR == "") && ($CIRRUS_BRANCH == "cheriot")
   timeout_in: 120m
   trigger_type: manual
-  container:
-    image: ubuntu:24.04
-    cpu: 8
-    memory: 16G
+  gce_instance:
+    <<: *arm_vm
+    image_family: ubuntu-2404-lts-amd64
+    architecture: amd64
+    zone: us-central1-a
+    type: t2d-standard-8
   env:
     NINJA_STATUS: '%p [%f:%s/%t] %o/s, %es'
     CIRRUS_CLONE_DEPTH: 1
@@ -78,10 +80,7 @@ arm_release_task:
   only_if: ($CIRRUS_PR == "") && ($CIRRUS_BRANCH == "cheriot")
   timeout_in: 120m
   trigger_type: manual
-  arm_container:
-    image: ubuntu:24.04
-    cpu: 8
-    memory: 16G
+  gce_instance: *arm_vm
   env:
     NINJA_STATUS: '%p [%f:%s/%t] %o/s, %es'
     CIRRUS_CLONE_DEPTH: 1
