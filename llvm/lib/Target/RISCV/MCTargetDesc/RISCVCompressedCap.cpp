@@ -16,7 +16,7 @@ namespace llvm {
 
 namespace RISCVCompressedCap {
 
-static constexpr CompressedCapability::CapabilityFormat
+static inline CompressedCapability::CapabilityFormat
 GetCapabilitySize(const MCSubtargetInfo &STI) {
   if (STI.getCPU() == "cheriot")
     return CompressedCapability::Cheriot64;
