@@ -2148,6 +2148,15 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
   }
 
   switch (BuiltinID) {
+  case Builtin::BI__builtin_cheriot_get_specified_minimum_stack: {
+    NamedDecl *currentDecl = getCurFunctionOrMethodDecl();
+    if (currentDecl && !currentDecl->hasAttr<MinimumStackAttr>()) {
+      Diag(TheCall->getBeginLoc(), diag::err_stack_minimum_no_attr)
+          << TheCall->getDirectCallee();
+      return ExprError();
+    }
+    break;
+  }
   case Builtin::BI__builtin___CFStringMakeConstantString:
     // CFStringMakeConstantString is currently not implemented for GOFF (i.e.,
     // on z/OS) and for XCOFF (i.e., on AIX). Emit unsupported

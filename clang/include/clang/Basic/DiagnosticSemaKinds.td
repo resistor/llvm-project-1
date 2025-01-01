@@ -7304,6 +7304,10 @@ def err_typecheck_convert_ptr_to_cap_unrelated_type: Error<"cannot implicitly "
   "or explicitly convert non-capability%select{| reference to}2 type %0 to "
   "unrelated capability type %1">;
 
+def err_stack_minimum_no_attr: Error<"cannot evaluate "
+  "__builtin_get_specificed_minimum_stack in function without specified minimum "
+  "stack size">;
+
 def warn_uintcap_bitwise_and : Warning<
   "using bitwise and on a capability type may give surprising results; "
   "if this is an alignment check use __builtin_{is_aligned,align_up,align_down}(); "
