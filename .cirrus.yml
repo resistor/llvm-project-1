@@ -37,7 +37,6 @@ x86_release_task:
   name: Build and upload artefact x86_64
   only_if: ($CIRRUS_PR == "") && ($CIRRUS_BRANCH == "cheriot")
   timeout_in: 120m
-  trigger_type: manual
   gce_instance:
     <<: *arm_vm
     image_family: ubuntu-2404-lts-amd64
@@ -75,7 +74,6 @@ arm_release_task:
   name: Build and upload artefact aarch64
   only_if: ($CIRRUS_PR == "") && ($CIRRUS_BRANCH == "cheriot")
   timeout_in: 120m
-  trigger_type: manual
   gce_instance: *arm_vm
   env:
     NINJA_STATUS: '%p [%f:%s/%t] %o/s, %es'
