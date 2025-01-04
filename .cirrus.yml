@@ -48,7 +48,7 @@ x86_release_task:
   dependencies_script:
     - set -eo pipefail
     - apt-get update
-    - apt-get install -y clang ninja-build lld cmake
+    - apt-get install -y clang ninja-build lld cmake ccache
   configure_script:
     - mkdir Build
     - cd Build
@@ -82,7 +82,7 @@ arm_release_task:
   dependencies_script:
     - set -eo pipefail
     - apt-get update
-    - apt-get install -y clang ninja-build lld cmake
+    - apt-get install -y clang ninja-build lld cmake ccache
   configure_script:
     - mkdir Build
     - cd Build
