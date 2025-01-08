@@ -338,6 +338,9 @@ KEYWORD(__capability                , KEYALL)
 KEYWORD(__cheri_output              , KEYALL)
 KEYWORD(__cheri_input               , KEYALL)
 
+// CHERIoT Predefine Expr
+KEYWORD(__cheriot_minimum_stack__   , KEYALL)
+
 // C++ 2.11p1: Keywords.
 KEYWORD(asm                         , KEYCXX|KEYGNU)
 KEYWORD(bool                        , BOOLSUPPORT|KEYC2X)
