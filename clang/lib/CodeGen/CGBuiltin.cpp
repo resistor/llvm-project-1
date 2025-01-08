@@ -2743,13 +2743,6 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
 
   switch (BuiltinIDIfNoAsmLabel) {
   default: break;
-  case Builtin::BI__builtin_cheriot_get_specified_minimum_stack: {
-    ConstantInt *Size = Builder.getSize(
-        CurFuncDecl->hasAttr<MinimumStackAttr>()
-            ? CurFuncDecl->getAttr<MinimumStackAttr>()->getSize()
-            : 0);
-    return RValue::get(Size);
-  }
   case Builtin::BI__builtin___CFStringMakeConstantString:
   case Builtin::BI__builtin___NSStringMakeConstantString:
     return RValue::get(ConstantEmitter(*this).emitAbstract(E, E->getType()));
