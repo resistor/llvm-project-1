@@ -3765,6 +3765,19 @@ ExprResult Sema::ActOnPredefinedExpr(SourceLocation Loc, tok::TokenKind Kind) {
   case tok::kw_L__FUNCTION__: IK = PredefinedExpr::LFunction; break; // [MS]
   case tok::kw_L__FUNCSIG__: IK = PredefinedExpr::LFuncSig; break; // [MS]
   case tok::kw___PRETTY_FUNCTION__: IK = PredefinedExpr::PrettyFunction; break;
+  case tok::kw___cheriot_minimum_stack__: {
+    FunctionDecl *FD = getCurFunctionDecl();
+
+    if (!FD || !FD->hasAttr<MinimumStackAttr>()) {
+      return Diag(Loc, diag::err_cheriot_minstack_without_annotation);
+    }
+
+    uint64_t MinStack = FD->getAttr<MinimumStackAttr>()->getSize();
+    auto Ty = Context.getSizeType();
+    unsigned Width = Context.getTypeSize(Ty);
+    return IntegerLiteral::Create(Context, llvm::APInt(Width, MinStack), Ty,
+                                  Loc);
+  }
   }
 
   return BuildPredefinedExpr(Loc, IK);

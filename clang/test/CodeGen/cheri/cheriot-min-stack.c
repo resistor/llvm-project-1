@@ -10,5 +10,14 @@ int disabled(void)
 	return foo();
 }
 
-// CHECK: attributes #0 =
+[[cheriot::minimum_stack(256)]]
+// CHECK-LABEL: @_Z9readback1v()
+// CHECK: ret i32 256
+__attribute__((cheri_compartment("example")))
+int readback1(void)
+{
+	return __cheriot_minimum_stack__;
+}
+
+// CHECK-LABEL: attributes #0 =
 // CHECK-SAME: "minimum-stack-size"="256"
