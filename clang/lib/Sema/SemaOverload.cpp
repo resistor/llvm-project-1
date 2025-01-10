@@ -5634,8 +5634,10 @@ Sema::PerformObjectArgumentInitialization(Expr *From,
 
   const auto *ThisPtrTy = Method->getThisType()->getAs<PointerType>();
   const auto *FromPtrTy = From->getType()->getAs<PointerType>();
-  if (FromPtrTy && ThisPtrTy->getPointerInterpretation() !=
-                       FromPtrTy->getPointerInterpretation()) {
+  if (FromPtrTy &&
+      ThisPtrTy->getPointerInterpretation() !=
+          FromPtrTy->getPointerInterpretation() &&
+      !isUnevaluatedContext()) {
     return Diag(From->getBeginLoc(), diag::err_sealed_this_pointer)
            << From->getType() << From->getSourceRange();
   }

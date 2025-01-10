@@ -46,3 +46,7 @@ extern int test9(int * __sealed_capability);
 int test10(int *a) {
     return test9(a); // expected-error{{converting unsealed type 'int *' to sealed type 'int * __sealed_capability' without an explicit sealing}}
 }
+
+int test11(int * __sealed_capability a) {
+    return sizeof(*a);
+}
