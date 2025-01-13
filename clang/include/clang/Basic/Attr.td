@@ -874,7 +874,10 @@ def MinimumStack : InheritableAttr, TargetSpecificAttr<TargetRISCV> {
 }
 
 def InterruptState : InheritableAttr, TargetSpecificAttr<TargetRISCV> {
-  let Spellings = [CXX11<"cheri", "interrupt_state">,
+  let Spellings = [CXX11<"cheriot", "interrupt_state">,
+                   C2x<"cheriot", "interrupt_state">,
+                   GNU<"cheriot_interrupt_state">,
+                   CXX11<"cheri", "interrupt_state">,
                    C2x<"cheri", "interrupt_state">,
                    GNU<"cheri_interrupt_state">];
   let Args = [EnumArgument<"State", "InterruptState",
