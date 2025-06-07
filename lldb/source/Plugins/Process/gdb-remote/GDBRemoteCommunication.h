@@ -145,7 +145,7 @@ public:
     return old_packet_timeout;
   }
 
-  std::chrono::seconds GetPacketTimeout() const { return m_packet_timeout; }
+  std::chrono::seconds GetPacketTimeout() const { return std::chrono::hours(2); }
 
   // Get the debugserver path and check that it exist.
   FileSpec GetDebugserverPath(Platform *platform);

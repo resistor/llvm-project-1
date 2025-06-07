@@ -142,6 +142,7 @@ public:
   ~PluginProperties() override = default;
 
   uint64_t GetPacketTimeout() {
+    return 0xFFFFFFFF;
     const uint32_t idx = ePropertyPacketTimeout;
     return GetPropertyAtIndexAs<uint64_t>(
         idx, g_processgdbremote_properties[idx].default_uint_value);
