@@ -429,9 +429,43 @@ ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
     return ABIArgInfo::getIgnore();
 
   bool IsSingleCapRecord = false;
-  if (auto *RT = Ty->getAs<RecordType>())
+  bool FitsInTwoRegs = false;
+  auto *RD = dyn_cast_if_present<RecordDecl>(Ty->getAsTagDecl());
+  if (RD) {
     IsSingleCapRecord = Size == getTarget().getCHERICapabilityWidth() &&
-                        getContext().containsCapabilities(RT->getDecl());
+                        getContext().containsCapabilities(RD);
+    FitsInTwoRegs = IsSingleCapRecord;
+
+    StringRef TargetABI = getTarget().getABI();
+    bool IsCheriot = TargetABI == "cheriot" || TargetABI == "cheriot-baremetal";
+
+    // If the target platform is CHERIoT, Check if the record fits in two
+    // registers, that is:
+    // 1. it has two fields
+    // 2. any of the two fields is either a capability or a type whose size can
+    // fit in the data part of a register
+    if (!IsSingleCapRecord && IsCheriot) {
+      int SeenFields = 0;
+      for (const FieldDecl *Field : RD->fields()) {
+        if (++SeenFields > 2) {
+          FitsInTwoRegs = false;
+          break;
+        }
+
+        auto FieldTy = Field->getType();
+        auto FieldInfo = Field->getASTContext().getTypeInfo(FieldTy);
+        if (!FieldTy->isAnyPointerType() &&
+            FieldInfo.Width > getTarget().getRegisterWidth()) {
+          FitsInTwoRegs = false;
+          break;
+        }
+
+        if (SeenFields == 2) {
+          FitsInTwoRegs = true;
+        }
+      }
+    }
+  }
 
   bool IsCapability = Ty->isCHERICapabilityType(getContext()) ||
                       IsSingleCapRecord;
@@ -528,7 +562,7 @@ ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
     return ABIArgInfo::getDirect();
   }
 
-  if (IsSingleCapRecord)
+  if (FitsInTwoRegs)
     return ABIArgInfo::getDirect();
 
   if (const VectorType *VT = Ty->getAs<VectorType>())
