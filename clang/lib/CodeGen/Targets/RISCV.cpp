@@ -35,6 +35,8 @@ private:
                                       llvm::Type *&Field2Ty,
                                       CharUnits &Field2Off) const;
 
+  bool shouldPassStructDirectInCapRegisters(uint64_t Size, QualType Ty) const;
+
 public:
   RISCVABIInfo(CodeGen::CodeGenTypes &CGT, unsigned XLen, unsigned FLen,
                bool EABI)
@@ -406,6 +408,20 @@ ABIArgInfo RISCVABIInfo::coerceVLSVector(QualType Ty) const {
   return ABIArgInfo::getDirect(ResType);
 }
 
+bool RISCVABIInfo::shouldPassStructDirectInCapRegisters(uint64_t Size,
+                                                        QualType Ty) const {
+  StringRef TargetABI = getTarget().getABI();
+  bool IsCheriot = TargetABI == "cheriot" || TargetABI == "cheriot-baremetal";
+
+  if (auto *RT = Ty->getAs<RecordType>()) {
+    unsigned MaxCapRegs = IsCheriot ? 2 : 1;
+    return Size == MaxCapRegs * getTarget().getCHERICapabilityWidth() &&
+           getContext().containsCapabilities(RT->getDecl());
+  }
+
+  return false;
+}
+
 ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
                                               int &ArgGPRsLeft,
                                               int &ArgFPRsLeft) const {
@@ -428,47 +444,9 @@ ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
   if (isEmptyRecord(getContext(), Ty, true) && Size == 0)
     return ABIArgInfo::getIgnore();
 
-  bool IsSingleCapRecord = false;
-  bool FitsInTwoRegs = false;
-  auto *RD = dyn_cast_if_present<RecordDecl>(Ty->getAsTagDecl());
-  if (RD) {
-    IsSingleCapRecord = Size == getTarget().getCHERICapabilityWidth() &&
-                        getContext().containsCapabilities(RD);
-    FitsInTwoRegs = IsSingleCapRecord;
-
-    StringRef TargetABI = getTarget().getABI();
-    bool IsCheriot = TargetABI == "cheriot" || TargetABI == "cheriot-baremetal";
-
-    // If the target platform is CHERIoT, Check if the record fits in two
-    // registers, that is:
-    // 1. it has two fields
-    // 2. any of the two fields is either a capability or a type whose size can
-    // fit in the data part of a register
-    if (!IsSingleCapRecord && IsCheriot) {
-      int SeenFields = 0;
-      for (const FieldDecl *Field : RD->fields()) {
-        if (++SeenFields > 2) {
-          FitsInTwoRegs = false;
-          break;
-        }
-
-        auto FieldTy = Field->getType();
-        auto FieldInfo = Field->getASTContext().getTypeInfo(FieldTy);
-        if (!FieldTy->isAnyPointerType() &&
-            FieldInfo.Width > getTarget().getRegisterWidth()) {
-          FitsInTwoRegs = false;
-          break;
-        }
-
-        if (SeenFields == 2) {
-          FitsInTwoRegs = true;
-        }
-      }
-    }
-  }
-
-  bool IsCapability = Ty->isCHERICapabilityType(getContext()) ||
-                      IsSingleCapRecord;
+  bool ForcePassInCapRegs = shouldPassStructDirectInCapRegisters(Size, Ty);
+  bool IsCapability =
+      Ty->isCHERICapabilityType(getContext()) || ForcePassInCapRegs;
 
   // Capabilities (including single-capability records, which are treated the
   // same as a single capability) are passed indirectly for hybrid varargs.
@@ -562,7 +540,7 @@ ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
     return ABIArgInfo::getDirect();
   }
 
-  if (FitsInTwoRegs)
+  if (ForcePassInCapRegs)
     return ABIArgInfo::getDirect();
 
   if (const VectorType *VT = Ty->getAs<VectorType>())
@@ -627,15 +605,10 @@ RValue RISCVABIInfo::EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,
   if (EABI && XLen == 32 && !IsCheriot)
     TInfo.Align = std::min(TInfo.Align, CharUnits::fromQuantity(4));
 
-  bool IsSingleCapRecord = false;
-  CharUnits CapabilityWidth =
-    CharUnits::fromQuantity(getTarget().getCHERICapabilityWidth() / 8);
-  if (const auto *RT = Ty->getAs<RecordType>())
-    IsSingleCapRecord = TInfo.Width == CapabilityWidth &&
-                        getContext().containsCapabilities(RT->getDecl());
-
-  bool IsCapability = Ty->isCHERICapabilityType(getContext()) ||
-                      IsSingleCapRecord;
+  bool ForcePassInCapRegs =
+      shouldPassStructDirectInCapRegisters(TInfo.Width.getQuantity(), Ty);
+  bool IsCapability =
+      Ty->isCHERICapabilityType(getContext()) || ForcePassInCapRegs;
 
   // Arguments bigger than 2*Xlen bytes are passed indirectly, as are
   // capabilities for the hybrid ABI.
