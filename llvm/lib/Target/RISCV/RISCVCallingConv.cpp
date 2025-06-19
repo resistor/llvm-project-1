@@ -478,6 +478,15 @@ bool llvm::CC_RISCV(unsigned ValNo, MVT ValVT, MVT LocVT,
   ArrayRef<MCPhysReg> ArgGPRs = RISCV::getArgGPRs(ABI);
   ArrayRef<MCPhysReg> ArgGPCRs = RISCV::getArgGPCRs(ABI);
 
+  if (ValVT == MVT::f64 && Subtarget.hasVendorXCheriot()) {
+    if (MCRegister Reg = State.AllocateReg(ArgGPCRs)) {
+      LocVT = MVT::c64;
+      LocInfo = CCValAssign::BCvt;
+      State.addLoc(CCValAssign::getReg(ValNo, ValVT, Reg, LocVT, LocInfo));
+      return false;
+    }
+  }
+
   // Zdinx use GPR without a bitcast when possible.
   if (LocVT == MVT::f64 && XLen == 64 && Subtarget.hasStdExtZdinx()) {
     if (MCRegister Reg = State.AllocateReg(ArgGPRs)) {

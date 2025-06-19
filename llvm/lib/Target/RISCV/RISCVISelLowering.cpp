@@ -2325,6 +2325,10 @@ MVT RISCVTargetLowering::getRegisterTypeForCallingConv(LLVMContext &Context,
       !Subtarget.hasStdExtZfhminOrZhinxmin())
     return MVT::f32;
 
+  // CHERIoT always passes i64/f64 in a single capability register.
+  if ((VT == MVT::i64 || VT == MVT::f64) && Subtarget.hasVendorXCheriot())
+    return MVT::c64;
+
   MVT PartVT = TargetLowering::getRegisterTypeForCallingConv(Context, CC, VT);
 
   return PartVT;
@@ -2348,6 +2352,10 @@ unsigned RISCVTargetLowering::getNumRegistersForCallingConv(LLVMContext &Context
   // We might still end up using a GPR but that will be decided based on ABI.
   if (VT == MVT::f16 && Subtarget.hasStdExtFOrZfinx() &&
       !Subtarget.hasStdExtZfhminOrZhinxmin())
+    return 1;
+
+  // CHERIoT always passes i64/f64 in a single capability register.
+  if ((VT == MVT::i64 || VT == MVT::f64) && Subtarget.hasVendorXCheriot())
     return 1;
 
   return TargetLowering::getNumRegistersForCallingConv(Context, CC, VT);
