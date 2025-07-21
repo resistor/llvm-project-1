@@ -283,6 +283,7 @@ def XLenRI : RegInfoByHwMode<
 def CLenVT : ValueTypeByHwMode<[RV32, RV64],
                                [c64, c128]>;
 def CLenFloatVT : ValueTypeByHwMode<[RV32, RV64], [f64, f128]>;
+def CLenIntVT : ValueTypeByHwMode<[RV32, RV64], [i64, i128]>;
 
 def CLenRI : RegInfoByHwMode<
       [RV32,              RV64],
@@ -316,7 +317,7 @@ def GPR : GPRRegisterClass<(add (sequence "X%u", 10, 17),
                                 (sequence "X%u", 0, 4))>;
 
 def GPCR
-    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64,
+    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT, CLenIntVT], 64,
                     (add(sequence "C%u", 10, 17), (sequence "C%u", 5, 7),
                         (sequence "C%u", 28, 31), (sequence "C%u", 8, 9),
                         (sequence "C%u", 18, 27), (sequence "C%u", 0, 4))> {
@@ -329,14 +330,14 @@ def GPRE : RegisterClass<"RISCV", [XLenVT, i32], 32,
   let RegInfos = XLenRI;
 }
 
-def GPCRE : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64,
+def GPCRE : RegisterClass<"RISCV", [CLenVT, CLenFloatVT, CLenIntVT], 64,
                           (add(sequence "C%u", 10, 15), (sequence "C%u", 5, 7),
                               (sequence "C%u", 8, 9), (sequence "C%u", 0, 4))> {
   let RegInfos = CLenRI;
 }
 
 def GPCRC0IsDDC
-    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64,
+    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT, CLenIntVT], 64,
                     (add(sequence "C%u", 10, 17), (sequence "C%u", 5, 7),
                         (sequence "C%u", 28, 31), (sequence "C%u", 8, 9),
                         (sequence "C%u", 18, 27), (sequence "C%u", 1, 4),
@@ -351,12 +352,12 @@ def GPRX5 : GPRRegisterClass<(add X5)>;
 def GPRNoX0 : GPRRegisterClass<(sub GPR, X0)>;
 
 def GPCRNoC0
-    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64, (sub GPCR, C0)> {
+    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT, CLenIntVT], 64, (sub GPCR, C0)> {
   let RegInfos = CLenRI;
 }
 
 def GPCRNoC0C1
-    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64, (sub GPCRNoC0, C1)> {
+    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT, CLenIntVT], 64, (sub GPCRNoC0, C1)> {
   let RegInfos = CLenRI;
 }
 
@@ -376,7 +377,7 @@ def GPRC : GPRRegisterClass<(add (sequence "X%u", 10, 15),
                                  (sequence "X%u", 8, 9))>;
 
 def GPCRC
-    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64,
+    : RegisterClass<"RISCV", [CLenVT, CLenFloatVT, CLenIntVT], 64,
                     (add(sequence "C%u", 10, 15), (sequence "C%u", 8, 9))> {
   let RegInfos = CLenRI;
 }
@@ -390,7 +391,7 @@ def GPRTC : GPRRegisterClass<(add (sequence "X%u", 6, 7),
                                   (sequence "X%u", 28, 31))>;
 def GPRTCNonX7 : GPRRegisterClass<(sub GPRTC, X7)>;
 
-def GPCRTC : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64,
+def GPCRTC : RegisterClass<"RISCV", [CLenVT, CLenFloatVT, CLenIntVT], 64,
                            (add(sequence "C%u", 5, 7), (sequence "C%u", 10, 17),
                                (sequence "C%u", 28, 31))> {
   let RegInfos = CLenRI;
@@ -398,7 +399,7 @@ def GPCRTC : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64,
 
 def SP : GPRRegisterClass<(add X2)>;
 
-def CSP : RegisterClass<"RISCV", [CLenVT, CLenFloatVT], 64, (add C2)> {
+def CSP : RegisterClass<"RISCV", [CLenVT, CLenFloatVT, CLenIntVT], 64, (add C2)> {
   let RegInfos = CLenRI;
 }
 

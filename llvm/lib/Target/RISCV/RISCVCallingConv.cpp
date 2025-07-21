@@ -487,7 +487,8 @@ bool llvm::CC_RISCV(unsigned ValNo, MVT ValVT, MVT LocVT,
   }
 
   // Cheriot uses GPCR without a bitcast when possible.
-  if (LocVT == MVT::f64 && Subtarget.hasVendorXCheriot() && !IsPureCapVarArgs) {
+  if ((LocVT == MVT::f64 || LocVT == MVT::i64) &&
+      Subtarget.hasVendorXCheriot() && !IsPureCapVarArgs) {
     if (MCRegister Reg = State.AllocateReg(ArgGPCRs)) {
       State.addLoc(CCValAssign::getReg(ValNo, ValVT, Reg, LocVT, LocInfo));
       return false;

@@ -173,6 +173,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
   if (Subtarget.hasVendorXCheriot()) {
     // Cheriot holds f64's in capability registers.
     addRegisterClass(MVT::f64, &RISCV::GPCRRegClass);
+    addRegisterClass(MVT::i64, &RISCV::GPCRRegClass);
   }
 
   static const MVT::SimpleValueType BoolVecVTs[] = {
@@ -686,17 +687,22 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
   }
 
   if (Subtarget.hasVendorXCheriot()) {
-    setOperationAction(ISD::ConstantFP, MVT::f64, Custom);
-
+    static const unsigned CheriotI64ExpandOps[] = {
+      ISD::ADD, ISD::SUB, ISD::MUL, ISD::SDIV, ISD::UDIV};
+    setOperationAction(CheriotI64ExpandOps, MVT::i64, Expand);
+    setOperationAction(ISD::ADD, MVT::i64, Expand);
+    setOperationAction(ISD::Constant, MVT::i64, Custom);
+    
     static const unsigned CheriotF64ExpandOps[] = {
-        ISD::FMINNUM,     ISD::FMAXNUM,     ISD::FADD,        ISD::FSUB,
-        ISD::FMUL,        ISD::FMA,         ISD::FDIV,        ISD::FSQRT,
-        ISD::FCEIL,       ISD::FTRUNC,      ISD::FFLOOR,      ISD::FROUND,
-        ISD::FROUNDEVEN,  ISD::FRINT,       ISD::FNEARBYINT,  ISD::IS_FPCLASS,
-        ISD::SETCC,       ISD::FMAXIMUM,    ISD::FMINIMUM,    ISD::STRICT_FADD,
-        ISD::STRICT_FSUB, ISD::STRICT_FMUL, ISD::STRICT_FDIV, ISD::STRICT_FSQRT,
-        ISD::STRICT_FMA};
+      ISD::FMINNUM,     ISD::FMAXNUM,     ISD::FADD,        ISD::FSUB,
+      ISD::FMUL,        ISD::FMA,         ISD::FDIV,        ISD::FSQRT,
+      ISD::FCEIL,       ISD::FTRUNC,      ISD::FFLOOR,      ISD::FROUND,
+      ISD::FROUNDEVEN,  ISD::FRINT,       ISD::FNEARBYINT,  ISD::IS_FPCLASS,
+      ISD::SETCC,       ISD::FMAXIMUM,    ISD::FMINIMUM,    ISD::STRICT_FADD,
+      ISD::STRICT_FSUB, ISD::STRICT_FMUL, ISD::STRICT_FDIV, ISD::STRICT_FSQRT,
+      ISD::STRICT_FMA};
     setOperationAction(CheriotF64ExpandOps, MVT::f64, Expand);
+    setOperationAction(ISD::ConstantFP, MVT::f64, Custom);
   }
 
   // TODO: On M-mode only targets, the cycle[h]/time[h] CSR may not be present.
@@ -6124,11 +6130,41 @@ SDValue RISCVTargetLowering::expandUnalignedRVVStore(SDValue Op,
                       Store->getMemOperand()->getFlags());
 }
 
-static SDValue lowerConstant(SDValue Op, SelectionDAG &DAG,
-                             const RISCVSubtarget &Subtarget) {
+SDValue
+RISCVTargetLowering::lowerConstant(SDValue Op, SelectionDAG &DAG,
+                             const RISCVSubtarget &Subtarget) const {
   assert(Op.getValueType() == MVT::i64 && "Unexpected VT");
 
   int64_t Imm = cast<ConstantSDNode>(Op)->getSExtValue();
+
+ if (Op.getValueType() == MVT::i64 && Subtarget.hasVendorXCheriot()) {
+    // Cheriot needs to custom lower i64 immediates using csethigh
+    SDLoc DL(Op);
+    uint64_t Val = cast<ConstantSDNode>(Op)->getZExtValue();
+
+    // Materialize 0 as cnull
+    if (Val == 0)
+      return DAG.getRegister(getNullCapabilityRegister(), MVT::i64);
+
+    // Otherwise, materialize the low part into a 32-bit register.
+    auto Lo = DAG.getConstant(Val & 0xFFFFFFFF, DL, MVT::i32);
+    auto LoAsCap = DAG.getTargetInsertSubreg(RISCV::sub_cap_addr, DL, MVT::c64,
+                                             DAG.getUNDEF(MVT::c64), Lo);
+
+    // The high half of a capability register is zeroed by integer ops,
+    // so if we wanted a zero high half then we are done.
+    if (Val >> 32 == 0)
+      return DAG.getBitcast(MVT::i64, LoAsCap);
+
+    // Otherwise, materialize the high half and use csethigh to combine the two
+    // halve.
+    auto Hi = DAG.getConstant(Val >> 32, DL, MVT::i32);
+    auto Cap = DAG.getNode(
+        ISD::INTRINSIC_WO_CHAIN, DL, MVT::c64,
+        DAG.getTargetConstant(Intrinsic::cheri_cap_high_set, DL, MVT::i32),
+        LoAsCap, Hi);
+    return DAG.getBitcast(MVT::i64, Cap);
+  }
 
   // All simm32 constants should be handled by isel.
   // NOTE: The getMaxBuildIntsCost call below should return a value >= 2 making

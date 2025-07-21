@@ -243,15 +243,26 @@ class PseudoAMO<RegisterClass ValTy=GPR>
 
 multiclass PseudoAMOPat<string AtomicOp, Instruction BaseInst,
                         RegisterClass ValTy=GPR> {
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_monotonic") (XLenVT GPR:$addr), ValTy:$incr),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_monotonic") (XLenVT GPR:$addr), (cPTR ValTy:$incr)),
             (BaseInst GPR:$addr, ValTy:$incr, 2)>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_acquire") (XLenVT GPR:$addr), ValTy:$incr),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_acquire") (XLenVT GPR:$addr), (cPTR ValTy:$incr)),
             (BaseInst GPR:$addr, ValTy:$incr, 4)>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_release") (XLenVT GPR:$addr), ValTy:$incr),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_release") (XLenVT GPR:$addr), (cPTR ValTy:$incr)),
             (BaseInst GPR:$addr, ValTy:$incr, 5)>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_acq_rel") (XLenVT GPR:$addr), ValTy:$incr),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_acq_rel") (XLenVT GPR:$addr), (cPTR ValTy:$incr)),
             (BaseInst GPR:$addr, ValTy:$incr, 6)>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_seq_cst") (XLenVT GPR:$addr), ValTy:$incr),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_seq_cst") (XLenVT GPR:$addr), (cPTR ValTy:$incr)),
+            (BaseInst GPR:$addr, ValTy:$incr, 7)>;
+
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_monotonic") (XLenVT GPR:$addr), (CLenIntVT ValTy:$incr)),
+            (BaseInst GPR:$addr, ValTy:$incr, 2)>;
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_acquire") (XLenVT GPR:$addr), (CLenIntVT ValTy:$incr)),
+            (BaseInst GPR:$addr, ValTy:$incr, 4)>;
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_release") (XLenVT GPR:$addr), (CLenIntVT ValTy:$incr)),
+            (BaseInst GPR:$addr, ValTy:$incr, 5)>;
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_acq_rel") (XLenVT GPR:$addr), (CLenIntVT ValTy:$incr)),
+            (BaseInst GPR:$addr, ValTy:$incr, 6)>;
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_seq_cst") (XLenVT GPR:$addr), (CLenIntVT ValTy:$incr)),
             (BaseInst GPR:$addr, ValTy:$incr, 7)>;
 }
 

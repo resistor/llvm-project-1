@@ -1333,17 +1333,17 @@ def PseudoCLLCInbounds : Pseudo<(outs GPCR:$dst), (ins bare_symbol:$src), [],
                         "cllc.inbounds", "$dst, $src">;
 }
 
-def : Pat<(riscv_cllc tglobaladdr:$in), (PseudoCLLC tglobaladdr:$in)>;
-def : Pat<(riscv_cllc tblockaddress:$in), (PseudoCLLC tblockaddress:$in)>;
-def : Pat<(riscv_cllc tjumptable:$in), (PseudoCLLC tjumptable:$in)>;
-def : Pat<(riscv_cllc tconstpool:$in), (PseudoCLLC tconstpool:$in)>;
+def : Pat<(cPTR (riscv_cllc tglobaladdr:$in)), (PseudoCLLC tglobaladdr:$in)>;
+def : Pat<(cPTR (riscv_cllc tblockaddress:$in)), (PseudoCLLC tblockaddress:$in)>;
+def : Pat<(cPTR (riscv_cllc tjumptable:$in)), (PseudoCLLC tjumptable:$in)>;
+def : Pat<(cPTR (riscv_cllc tconstpool:$in)), (PseudoCLLC tconstpool:$in)>;
 
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0, isCodeGenOnly = 0,
     isAsmParserOnly = 1, Size = 8 in
 def PseudoCLGC : Pseudo<(outs GPCR:$dst), (ins bare_symbol:$src), [],
                         "clgc", "$dst, $src">;
 
-def : Pat<(riscv_clgc tglobaladdr:$in), (PseudoCLGC tglobaladdr:$in)>;
+def : Pat<(cPTR (riscv_clgc tglobaladdr:$in)), (PseudoCLGC tglobaladdr:$in)>;
 
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0, isCodeGenOnly = 0,
     isAsmParserOnly = 1, Size = 8 in
@@ -1384,22 +1384,22 @@ def CheriSplitStoreF64Pseudo
 } // Predicates = [HasCheri, HasStdExtD, IsRV32]
 
 class PatGpcr<SDPatternOperator OpNode, RVInstCheriSrcDst Inst, ValueType RetVt=XLenVT>
-    : Pat<(RetVt (OpNode GPCR:$rs1)), (Inst GPCR:$rs1)>;
+    : Pat<(RetVt (OpNode (cPTR GPCR:$rs1))), (Inst GPCR:$rs1)>;
 
 class PatGpcrGpcr<SDPatternOperator OpNode, RVInst Inst, ValueType RetVt=CLenVT>
-    : Pat<(RetVt (OpNode GPCR:$rs1, GPCR:$rs2)), (Inst GPCR:$rs1, GPCR:$rs2)>;
+    : Pat<(RetVt (OpNode (cPTR GPCR:$rs1), (cPTR GPCR:$rs2))), (Inst GPCR:$rs1, GPCR:$rs2)>;
 
 class PatGpcrGpr<SDPatternOperator OpNode, RVInst Inst>
-    : Pat<(OpNode GPCR:$rs1, (XLenVT GPR:$rs2)), (Inst GPCR:$rs1, GPR:$rs2)>;
+    : Pat<(OpNode (cPTR GPCR:$rs1), (XLenVT GPR:$rs2)), (Inst GPCR:$rs1, GPR:$rs2)>;
 
 class PatGpcrSimm12<SDPatternOperator OpNode, RVInstI Inst>
-    : Pat<(OpNode GPCR:$rs1, simm12:$imm12), (Inst GPCR:$rs1, simm12:$imm12)>;
+    : Pat<(OpNode (cPTR GPCR:$rs1), simm12:$imm12), (Inst GPCR:$rs1, simm12:$imm12)>;
 
 class PatGpcrUimm12<SDPatternOperator OpNode, RVInstI Inst>
-    : Pat<(OpNode GPCR:$rs1, uimm12:$imm12), (Inst GPCR:$rs1, uimm12:$imm12)>;
+    : Pat<(OpNode (cPTR GPCR:$rs1), uimm12:$imm12), (Inst GPCR:$rs1, uimm12:$imm12)>;
 
 class PatGprGpcr<SDPatternOperator OpNode, RVInst Inst>
-    : Pat<(OpNode GPR:$rs1, GPCR:$rs2), (Inst GPR:$rs1, GPCR:$rs2)>;
+    : Pat<(OpNode GPR:$rs1, (cPTR GPCR:$rs2)), (Inst GPR:$rs1, GPCR:$rs2)>;
 
 /// Capability-Inspection Instructions
 
@@ -1721,15 +1721,15 @@ defm : CheriExplicitLdPat<load, LC_CAP_128, GPCR, CLenVT, CLenVT>;
 }
 
 let Predicates = [HasCheri, NotCapMode, HasStdExtF] in
-def : Pat<(load GPCR:$rs1), (FMV_W_X (LW_CAP GPCR:$rs1))>;
+def : Pat<(load (cPTR GPCR:$rs1)), (FMV_W_X (LW_CAP GPCR:$rs1))>;
 
 let Predicates = [HasCheri, NotCapMode, HasStdExtD, IsRV32] in
-def : Pat<(load GPCR:$rs1),
+def : Pat<(load (cPTR GPCR:$rs1)),
           (BuildPairF64Pseudo (LW_CAP GPCR:$rs1),
                               (LW_CAP (CIncOffsetImm GPCR:$rs1, 4)))>;
 
 let Predicates = [HasCheri, NotCapMode, HasStdExtD, IsRV64] in
-def : Pat<(load GPCR:$rs1), (FMV_D_X (LD_CAP GPCR:$rs1))>;
+def : Pat<(load (cPTR GPCR:$rs1)), (FMV_D_X (LD_CAP GPCR:$rs1))>;
 
 /// Capability stores
 
@@ -1750,15 +1750,15 @@ defm : CheriExplicitStPat<store, SC_CAP_128, GPCR, GPCR, CLenVT, CLenVT>;
 }
 
 let Predicates = [HasCheri, NotCapMode, HasStdExtF] in
-def : Pat<(store FPR32:$rs2, GPCR:$rs1),
+def : Pat<(store FPR32:$rs2, (cPTR GPCR:$rs1)),
           (SW_CAP (FMV_X_W FPR32:$rs2), GPCR:$rs1)>;
 
 let Predicates = [HasCheri, NotCapMode, HasStdExtD, IsRV32] in
-def : Pat<(store FPR64:$rs2, GPCR:$rs1),
+def : Pat<(store FPR64:$rs2, (cPTR GPCR:$rs1)),
           (KILL (CheriSplitStoreF64Pseudo FPR64:$rs2, GPCR:$rs1))>;
 
 let Predicates = [HasCheri, NotCapMode, HasStdExtD, IsRV64] in
-def : Pat<(store FPR64:$rs2, GPCR:$rs1),
+def : Pat<(store FPR64:$rs2, (cPTR GPCR:$rs1)),
           (SD_CAP (FMV_X_D FPR64:$rs2), GPCR:$rs1)>;
 
 /// Non-Capability Mode Instructions
@@ -1858,15 +1858,15 @@ multiclass CheriAMOPat<string AtomicOp, string BaseInst> {
 }
 
 multiclass CheriAMOSubPat<string AtomicOp, string BaseInst> {
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_monotonic") GPCR:$addr, (XLenVT GPR:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_monotonic") (cPTR GPCR:$addr), (XLenVT GPR:$incr)),
             (!cast<RVInst>(BaseInst) GPCR:$addr, (SUB (XLenVT X0), (XLenVT GPR:$incr)))>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_acquire") GPCR:$addr, (XLenVT GPR:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_acquire") (cPTR GPCR:$addr), (XLenVT GPR:$incr)),
             (!cast<RVInst>(BaseInst#"_AQ") GPCR:$addr, (SUB (XLenVT X0), (XLenVT GPR:$incr)))>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_release") GPCR:$addr, (XLenVT GPR:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_release") (cPTR GPCR:$addr), (XLenVT GPR:$incr)),
             (!cast<RVInst>(BaseInst#"_RL") GPCR:$addr, (SUB (XLenVT X0), (XLenVT GPR:$incr)))>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_acq_rel") GPCR:$addr, (XLenVT GPR:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_acq_rel") (cPTR GPCR:$addr), (XLenVT GPR:$incr)),
             (!cast<RVInst>(BaseInst#"_AQ_RL") GPCR:$addr, (SUB (XLenVT X0), (XLenVT GPR:$incr)))>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_seq_cst") GPCR:$addr, (XLenVT GPR:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_seq_cst") (cPTR GPCR:$addr), (XLenVT GPR:$incr)),
             (!cast<RVInst>(BaseInst#"_AQ_RL") GPCR:$addr, (SUB (XLenVT X0), (XLenVT GPR:$incr)))>;
 }
 
@@ -1882,15 +1882,15 @@ class PseudoCheriAMO<RegisterClass ValTy=GPR>
 multiclass PseudoCheriAMOPat<string AtomicOp, Instruction BaseInst,
                              RegisterClass ValTy=GPR> {
   defvar vt = ValTy.RegTypes[0];
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_monotonic") GPCR:$addr, (vt ValTy:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_monotonic") (cPTR GPCR:$addr), (vt ValTy:$incr)),
             (BaseInst GPCR:$addr, ValTy:$incr, 2)>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_acquire") GPCR:$addr, (vt ValTy:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_acquire") (cPTR GPCR:$addr), (vt ValTy:$incr)),
             (BaseInst GPCR:$addr, ValTy:$incr, 4)>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_release") GPCR:$addr, (vt ValTy:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_release") (cPTR GPCR:$addr), (vt ValTy:$incr)),
             (BaseInst GPCR:$addr, ValTy:$incr, 5)>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_acq_rel") GPCR:$addr, (vt ValTy:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_acq_rel") (cPTR GPCR:$addr), (vt ValTy:$incr)),
             (BaseInst GPCR:$addr, ValTy:$incr, 6)>;
-  def : Pat<(!cast<PatFrag>(AtomicOp#"_seq_cst") GPCR:$addr, (vt ValTy:$incr)),
+  def : Pat<(!cast<PatFrag>(AtomicOp#"_seq_cst") (cPTR GPCR:$addr), (vt ValTy:$incr)),
             (BaseInst GPCR:$addr, ValTy:$incr, 7)>;
 }
 
@@ -1906,15 +1906,15 @@ class PseudoCheriCmpXchg<RegisterClass ValTy=GPR>
 multiclass PseudoCheriCmpXchgPat<string Op, Pseudo CmpXchgInst,
                                  RegisterClass ValTy=GPR> {
   defvar vt = ValTy.RegTypes[0];
-  def : Pat<(!cast<PatFrag>(Op#"_monotonic") GPCR:$addr, (vt ValTy:$cmp), (vt ValTy:$new)),
+  def : Pat<(!cast<PatFrag>(Op#"_monotonic") (cPTR GPCR:$addr), (vt ValTy:$cmp), (vt ValTy:$new)),
             (CmpXchgInst GPCR:$addr, ValTy:$cmp, ValTy:$new, 2)>;
-  def : Pat<(!cast<PatFrag>(Op#"_acquire") GPCR:$addr, (vt ValTy:$cmp), (vt ValTy:$new)),
+  def : Pat<(!cast<PatFrag>(Op#"_acquire") (cPTR GPCR:$addr), (vt ValTy:$cmp), (vt ValTy:$new)),
             (CmpXchgInst GPCR:$addr, ValTy:$cmp, ValTy:$new, 4)>;
-  def : Pat<(!cast<PatFrag>(Op#"_release") GPCR:$addr, (vt ValTy:$cmp), (vt ValTy:$new)),
+  def : Pat<(!cast<PatFrag>(Op#"_release") (cPTR GPCR:$addr), (vt ValTy:$cmp), (vt ValTy:$new)),
             (CmpXchgInst GPCR:$addr, ValTy:$cmp, ValTy:$new, 5)>;
-  def : Pat<(!cast<PatFrag>(Op#"_acq_rel") GPCR:$addr, (vt ValTy:$cmp), (vt ValTy:$new)),
+  def : Pat<(!cast<PatFrag>(Op#"_acq_rel") (cPTR GPCR:$addr), (vt ValTy:$cmp), (vt ValTy:$new)),
             (CmpXchgInst GPCR:$addr, ValTy:$cmp, ValTy:$new, 6)>;
-  def : Pat<(!cast<PatFrag>(Op#"_seq_cst") GPCR:$addr, (vt ValTy:$cmp), (vt ValTy:$new)),
+  def : Pat<(!cast<PatFrag>(Op#"_seq_cst") (cPTR GPCR:$addr), (vt ValTy:$cmp), (vt ValTy:$new)),
             (CmpXchgInst GPCR:$addr, ValTy:$cmp, ValTy:$new, 7)>;
 } 
 
@@ -1991,8 +1991,8 @@ let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
 def PseudoCBRIND : Pseudo<(outs), (ins GPCRNoC0C1:$rs1, simm12:$imm12), []>,
                    PseudoInstExpansion<(CJALR C0, GPCR:$rs1, simm12:$imm12)>;
 
-def : Pat<(brind GPCR:$rs1), (PseudoCBRIND GPCR:$rs1, 0)>;
-def : Pat<(brind (cptradd GPCR:$rs1, simm12:$imm12)),
+def : Pat<(brind (cPTR GPCR:$rs1)), (PseudoCBRIND GPCR:$rs1, 0)>;
+def : Pat<(brind (cptradd (cPTR GPCR:$rs1), simm12:$imm12)),
           (PseudoCBRIND GPCR:$rs1, simm12:$imm12)>;
 } // Predicates = [HasCheri, IsCapMode, IsPureCapABI]
 
@@ -2455,4 +2455,8 @@ multiclass NopCapRegCast<ValueType Ty1, ValueType Ty2> {
   def : Pat<(Ty2(bitconvert(Ty1 GPCR:$Val))), (Ty2 GPCR:$Val)>;
 }
 
-let Predicates = [HasCheri, HasCheriot] in { defm : NopCapRegCast<c64, f64>; }
+let Predicates = [HasCheri, HasCheriot] in {
+  defm : NopCapRegCast<c64, f64>;
+  defm : NopCapRegCast<c64, i64>;
+  defm : NopCapRegCast<f64, i64>;
+}
