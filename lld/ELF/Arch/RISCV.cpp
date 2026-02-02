@@ -1189,6 +1189,57 @@ static bool rewriteCheriotLowRelocs(Ctx &ctx, InputSection &sec) {
   return modified;
 }
 
+static bool optimizeCheriotDataSections(Ctx &ctx, InputSection &sec) {
+  //- Before OutputSection::finalizeInputSections()
+  //    - For all SHF_EXECINSTR output sections
+  //        - Iterate relocations to gather rewritable references to
+  //        non-SHF_EXECINSTR output sections
+  //            - Q: how to obtain output section for each reference?
+  //        - Perform the business logic of determining which ones to turn into
+  //        captables
+  //        - Create captable at end of current output section
+  //        - Create a new OutputSection to hold the transformed globals
+  //        - For each transformed global:
+  //            - Populate cap reloc
+  //                - Q: When during linking are cap relocs able to be created??
+  //            - Cut-and-paste the transformed global into the new
+  //            OutputSection
+  //                - Q: how exactly do we remove them from the original?
+  //                details are murky
+  //        - For each impacted relocation:
+  //            - Build an array of relocations to append to output
+  //            - Build an array of relocation indices to nop-out
+  //- During relocation emission:
+  //    - Handle appended / nop'd relocations despite -r
+  //    - Re-sort relocations at the end
+
+  DenseMap<Symbol *, uint64_t> crossSectionReferences;
+  SmallPtrSet<Symbol *, 4> symbolsToOptimize;
+  for (const auto &rel : sec.relocs()) {
+    RelType type = rel.type;
+    if (type != R_RISCV_CHERIOT_COMPARTMENT_HI)
+      continue;
+    Symbol *sym = rel.sym;
+    OutputSection *referencedOSec = sym->getOutputSection();
+    if (!referencedOSec) continue;
+    if (referencedOSec->flags & SHF_EXECINSTR)
+      continue;
+
+    crossSectionReferences[sym] += 1;
+  }
+
+  uint64_t notOptimizeCount = 0;
+  for (auto &[sym, count] : crossSectionReferences) {
+    //llvm::outs() << "CrossSecRef: " << count << "\n";
+    if (count >= 4 || sym->getSize(ctx) > 4095) // What is the actual size?
+      symbolsToOptimize.insert(sym);
+    else
+      notOptimizeCount += 1;
+  }
+
+  return false;
+}
+
 static bool relax(Ctx &ctx, int pass, InputSection &sec) {
   const uint64_t secAddr = sec.getVA();
   const MutableArrayRef<Relocation> relocs = sec.relocs();
@@ -1201,8 +1252,10 @@ static bool relax(Ctx &ctx, int pass, InputSection &sec) {
   // On the first pass, do a scan of LO_I CHERIoT relocations
   // FIXME: One the relocation scan loop is under target control, this should be
   // applied outside of relaxation.
-  if (pass == 0)
+  if (pass == 0) {
     changed |= rewriteCheriotLowRelocs(ctx, sec);
+    changed |= optimizeCheriotDataSections(ctx, sec);
+  }
 
   std::fill_n(aux.relocTypes.get(), relocs.size(), R_RISCV_NONE);
   aux.writes.clear();
