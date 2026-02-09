@@ -811,6 +811,8 @@ static void setUnresolvedSymbolPolicy(Ctx &ctx, opt::InputArgList &args) {
 
   ctx.arg.unresolvedSymbols =
       diagRegular ? errorOrWarn : UnresolvedPolicy::Ignore;
+  if (ctx.arg.compartment)
+    ctx.arg.unresolvedSymbols = UnresolvedPolicy::Ignore;
   ctx.arg.unresolvedSymbolsInShlib =
       diagShlib ? errorOrWarn : UnresolvedPolicy::Ignore;
 }

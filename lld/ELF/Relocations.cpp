@@ -478,6 +478,8 @@ protected:
   // End of relocations, used by Mips/PPC64.
   const void *end = nullptr;
 
+  bool prevCompartmentResolved = false;
+
   template <class RelTy> RelType getMipsN32RelType(RelTy *&rel) const;
   template <class ELFT, class RelTy>
   int64_t computeMipsAddend(const RelTy &rel, RelExpr expr, bool isLocal) const;
@@ -489,7 +491,7 @@ protected:
                                Symbol &sym, int64_t addend);
 
   template <class ELFT, class RelTy>
-  void scanOne(typename Relocs<RelTy>::const_iterator &i);
+  void scanOne(typename Relocs<RelTy>::const_iterator &i, typename Relocs<RelTy>::const_iterator b);
   template <class ELFT, class RelTy> void scan(Relocs<RelTy> rels);
 };
 
@@ -1301,7 +1303,7 @@ void RelocationScannerBase<D>::processAux(RelExpr expr, RelType type,
   // -shared matches the spirit of its -z undefs default. -pie has freedom on
   // choices, and we choose dynamic relocations to be consistent with the
   // handling of GOT-generating relocations.
-  if (static_cast<D*>(this)->isStaticLinkTimeConstant(expr, type, sym, offset) ||
+  if (static_cast<const D*>(this)->isStaticLinkTimeConstant(expr, type, sym, offset) ||
       (!ctx.arg.isPic && sym.isUndefWeak())) {
     sec->addReloc(ctx, {expr, type, offset, addend, &sym});
     return;
@@ -1750,7 +1752,8 @@ unsigned RelocationScannerBase<D>::handleTlsRelocation(
 template <typename D>
 template <class ELFT, class RelTy>
 void RelocationScannerBase<D>::scanOne(
-    typename Relocs<RelTy>::const_iterator &i) {
+    typename Relocs<RelTy>::const_iterator &i,
+    typename Relocs<RelTy>::const_iterator b) {
   const RelTy &rel = *i;
   uint32_t symIndex = rel.getSymbol(ctx.arg.isMips64EL);
   Symbol &sym = sec->getFile<ELFT>()->getSymbol(symIndex);
@@ -1856,6 +1859,57 @@ void RelocationScannerBase<D>::scanOne(
     }
   }
 
+  if (ctx.arg.compartment) {
+    sec->addReloc(ctx, {expr, type, offset, addend, &sym});
+
+    if (prevCompartmentResolved && type == R_RISCV_RELAX) {
+      sec->markAsCompartmentResolved(sec->relocs().size()-1);
+      prevCompartmentResolved = false;
+      return;
+    }
+
+    if (!sym.isDefined()) {
+      prevCompartmentResolved = false;
+      return;
+    }
+    if (sym.getOutputSection() != sec->getOutputSection()) {
+      prevCompartmentResolved = false;
+      return;
+    }
+
+    if (type == R_RISCV_CHERIOT_COMPARTMENT_LO_I || type == R_RISCV_CHERIOT_COMPARTMENT_LO_S) {
+      const Defined *d = cast<Defined>(&sym);
+      bool hiResolved = false;
+      for (const auto [idx, rel] : llvm::enumerate(sec->relocs())) {
+        if (rel.type == R_RISCV_CHERIOT_COMPARTMENT_HI &&
+          rel.offset == d->value &&
+        sec->isCompartmentResolved(idx)) {
+          hiResolved = true;
+          break;
+        }
+      }
+      if (!hiResolved) {
+        prevCompartmentResolved = false;
+        return;
+      }
+    }
+
+    if (type != R_RISCV_CALL_PLT &&
+        type != R_RISCV_BRANCH &&
+        type != R_RISCV_RVC_BRANCH &&
+        type != R_RISCV_RVC_JUMP &&
+        type != R_RISCV_CHERIOT_COMPARTMENT_HI &&
+        type != R_RISCV_CHERIOT_COMPARTMENT_LO_I &&
+        type != R_RISCV_CHERIOT_COMPARTMENT_LO_S &&
+        type != R_RISCV_CHERIOT_COMPARTMENT_SIZE) {
+      prevCompartmentResolved = false;
+      return;
+    }
+    sec->markAsCompartmentResolved(sec->relocs().size()-1);
+    prevCompartmentResolved = true;
+    return;
+  }
+
   static_cast<D *>(this)->processAux(expr, type, offset, sym, addend);
 }
 
@@ -1918,12 +1972,12 @@ void RelocationScannerBase<D>::scan(Relocs<RelTy> rels) {
 
   if constexpr (RelTy::IsCrel) {
     for (auto i = rels.begin(); i != rels.end();)
-      static_cast<D *>(this)->template scanOne<ELFT, RelTy>(i);
+      static_cast<D *>(this)->template scanOne<ELFT, RelTy>(i, rels.begin());
   } else {
     // The non-CREL code path has additional check for PPC64 TLS.
     end = static_cast<const void *>(rels.end());
     for (auto i = rels.begin(); i != end;)
-      static_cast<D *>(this)->template scanOne<ELFT, RelTy>(i);
+      static_cast<D *>(this)->template scanOne<ELFT, RelTy>(i, rels.begin());
   }
 
   // Sort relocations by offset for more efficient searching for
@@ -1982,6 +2036,7 @@ template <class ELFT, class ScannerT> void scanRelocationsInternal(Ctx &ctx) {
     auto scanEH = [&] {
       RelocationScanner scanner(ctx);
       for (Partition &part : ctx.partitions) {
+        if (!part.ehFrame) continue;
         for (EhInputSection *sec : part.ehFrame->sections)
           scanner.template scanSection<ELFT>(*sec, /*isEH=*/true);
         if (part.armExidx && part.armExidx->isLive())

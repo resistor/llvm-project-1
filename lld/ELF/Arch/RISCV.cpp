@@ -836,6 +836,10 @@ void RISCV::relocateAlloc(InputSectionBase &sec, uint8_t *buf) const {
   const ArrayRef<Relocation> relocs = sec.relocs();
   for (size_t i = 0, size = relocs.size(); i != size; ++i) {
     const Relocation &rel = relocs[i];
+
+    if (ctx.arg.compartment && !sec.isCompartmentResolved(i))
+      continue;
+
     uint8_t *loc = buf + rel.offset;
     uint64_t val = sec.getRelocTargetVA(ctx, rel, secAddr + rel.offset);
 
@@ -1128,7 +1132,9 @@ static void relaxCGP(Ctx &ctx, const InputSection &sec, size_t i, uint64_t loc,
  */
 static bool rewriteCheriotLowRelocs(Ctx &ctx, InputSection &sec) {
   bool modified = false;
-  for (auto &r : sec.relocations) {
+  for (auto [idx, r] : llvm::enumerate(sec.relocations)) {
+    if (ctx.arg.compartment && !sec.isCompartmentResolved(idx))
+      continue;
     if (r.type == R_RISCV_CHERIOT_COMPARTMENT_HI &&
         isPCCRelative(ctx, nullptr, r.sym)) {
       modified = true;
@@ -1207,6 +1213,8 @@ static bool relax(Ctx &ctx, int pass, InputSection &sec) {
   std::fill_n(aux.relocTypes.get(), relocs.size(), R_RISCV_NONE);
   aux.writes.clear();
   for (auto [i, r] : llvm::enumerate(relocs)) {
+    if (ctx.arg.compartment && !sec.isCompartmentResolved(i))
+      continue;
     const uint64_t loc = secAddr + r.offset - delta;
     uint32_t &cur = aux.relocDeltas[i], remove = 0;
     switch (r.type) {
@@ -1314,7 +1322,7 @@ static bool relax(Ctx &ctx, int pass, InputSection &sec) {
 // relaxation pass.
 bool RISCV::relaxOnce(int pass) const {
   llvm::TimeTraceScope timeScope("RISC-V relaxOnce");
-  if (ctx.arg.relocatable)
+  if (ctx.arg.relocatable && !ctx.arg.compartment)
     return false;
 
   if (pass == 0)

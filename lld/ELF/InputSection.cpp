@@ -437,10 +437,11 @@ template <class ELFT, class RelTy>
 void InputSection::copyRelocations(Ctx &ctx, uint8_t *buf) {
   bool linkerRelax =
       ctx.arg.relax && is_contained({EM_RISCV, EM_LOONGARCH}, ctx.arg.emachine);
-  if (!ctx.arg.relocatable && (linkerRelax || ctx.arg.branchToBranch)) {
+  InputSectionBase *sec = getRelocatedSection();
+  bool compartmentCode = ctx.arg.compartment && sec->flags & SHF_EXECINSTR;
+  if ((!ctx.arg.relocatable || compartmentCode) && (linkerRelax || ctx.arg.branchToBranch)) {
     // On LoongArch and RISC-V, relaxation might change relocations: copy
     // from internal ones that are updated by relaxation.
-    InputSectionBase *sec = getRelocatedSection();
     copyRelocations<ELFT, RelTy>(
         ctx, buf,
         llvm::make_range(sec->relocations.begin(), sec->relocations.end()));
@@ -478,7 +479,7 @@ void InputSection::copyRelocations(Ctx &ctx, uint8_t *buf,
   InputSectionBase *sec = getRelocatedSection();
   (void)sec->contentMaybeDecompress(); // uncompress if needed
 
-  for (const Relocation &rel : rels) {
+  for (auto [idx, rel] : llvm::enumerate(rels)) {
     RelType type = rel.type;
     const ObjFile<ELFT> *file = getFile<ELFT>();
     Symbol &sym = *rel.sym;
@@ -492,8 +493,18 @@ void InputSection::copyRelocations(Ctx &ctx, uint8_t *buf,
     // Output section VA is zero for -r, so r_offset is an offset within the
     // section, but for --emit-relocs it is a virtual address.
     p->r_offset = sec->getVA(rel.offset);
-    p->setSymbolAndType(ctx.in.symTab->getSymbolIndex(sym), type,
-                        ctx.arg.isMips64EL);
+    if (ctx.arg.emachine == EM_RISCV && ctx.arg.isCheriot) {
+      if (type == /*INTERNAL_R_RISCV_CHERIOT_COMPARTMENT_PCCREL_LO_I*/270)
+        type = R_RISCV_CHERIOT_COMPARTMENT_LO_I;
+      else if (type == /*INTERNAL_R_RISCV_CHERIOT_COMPARTMENT_PCCREL_HI*/271)
+        type = R_RISCV_CHERIOT_COMPARTMENT_HI;
+    }
+    if (ctx.arg.compartment && sec->isCompartmentResolved(idx)) {
+      p->setSymbolAndType(0, R_RISCV_NONE, ctx.arg.isMips64EL);
+    } else {
+      p->setSymbolAndType(ctx.in.symTab->getSymbolIndex(sym), type,
+                          ctx.arg.isMips64EL);
+    }
 
     if (sym.type == STT_SECTION) {
       // We combine multiple section symbols into only one per

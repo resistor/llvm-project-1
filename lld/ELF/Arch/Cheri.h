@@ -97,6 +97,7 @@ private:
                 llvm::PointerUnion<Symbol *, InputSectionBase *> symOrSec,
                 int64_t addend, RelExpr expr, RelType type);
   bool addEntry(CheriCapRelocLocation loc, CheriCapReloc relocation) {
+    assert(loc.offset <= loc.section->getSize());
     auto it = relocsMap.insert(std::make_pair(loc, relocation));
     // assert(it.first->second == Relocation);
     if (!(it.first->second == relocation)) {
@@ -351,7 +352,7 @@ inline bool isPCCRelative(Ctx &ctx, const uint8_t *loc, const Symbol *sym) {
     Fatal(ctx) << getErrorLoc(ctx, loc) << "relocation against symbol "
                << toStr(ctx, *sym) << " which is not in any output section";
   }
-  return outputSection->flags & llvm::ELF::SHF_EXECINSTR;
+  return (outputSection->flags & llvm::ELF::SHF_EXECINSTR) || (outputSection->name == ".rodata");
 }
 
 // Same with getBiasedCGPOffset(), but we only care about the bottom 12 bits

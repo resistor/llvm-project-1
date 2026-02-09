@@ -16,6 +16,7 @@
 #include "lld/Common/Memory.h"
 #include "llvm/ADT/CachedHashString.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/TinyPtrVector.h"
 #include "llvm/Object/ELF.h"
@@ -285,6 +286,16 @@ public:
   MutableArrayRef<Relocation> relocs() { return relocations; }
   ArrayRef<Relocation> relocs() const { return relocations; }
 
+  llvm::SmallDenseSet<size_t, 1> cheriotCompartmentResolve;
+
+  void markAsCompartmentResolved(size_t i) {
+    cheriotCompartmentResolve.insert(i);
+  }
+
+  bool isCompartmentResolved(size_t i) {
+    return cheriotCompartmentResolve.contains(i);
+  }
+
   union {
     // These are modifiers to jump instructions that are necessary when basic
     // block sections are enabled.  Basic block sections creates opportunities
@@ -499,7 +510,7 @@ public:
 };
 
 #ifndef _WIN32
-static_assert(sizeof(InputSection) <= 152, "InputSection is too big");
+static_assert(sizeof(InputSection) <= 184, "InputSection is too big");
 #endif
 
 class SyntheticSection : public InputSection {

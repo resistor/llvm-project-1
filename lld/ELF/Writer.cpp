@@ -1707,7 +1707,7 @@ template <class ELFT> void Writer<ELFT>::finalizeAddressDependentContent() {
       finalizeOrderDependentContent();
     }
   }
-  if (!ctx.arg.relocatable)
+  if (!ctx.arg.relocatable || ctx.arg.compartment)
     ctx.target->finalizeRelax(pass);
 
   if (ctx.arg.relocatable)
@@ -2118,7 +2118,7 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
   // by declareSymbols) to actual definitions.
   ctx.script->processSymbolAssignments();
 
-  if (!ctx.arg.relocatable) {
+  if (!ctx.arg.relocatable || ctx.arg.compartment) {
     llvm::TimeTraceScope timeScope("Scan relocations");
     // Scan relocations. This must be done after every symbol is declared so
     // that we can correctly decide if a dynamic relocation is needed. This is
