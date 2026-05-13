@@ -894,8 +894,8 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
 
   QualType BaseType = BaseExprType;
   // CHERIoT-specific check.
-  if (BaseType.hasCHERIoTSealedAttr() && !isUnevaluatedContext()) {
-    return ExprError(Diag(OpLoc, diag::err_cheriot_non_addr_of_expr_on_sealed));
+  if (!isUnevaluatedContext() && CheckUnguardedCHERIoTSealedVarUse(BaseExpr)) {
+    return ExprError();
   }
 
   if (IsArrow) {

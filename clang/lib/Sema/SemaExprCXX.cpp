@@ -976,6 +976,11 @@ bool Sema::CheckCXXThrowOperand(SourceLocation ThrowLoc,
     isPointer = true;
   }
 
+  // CHERIoT-specific check: cannot throw a sealed variable.
+  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
+    if (CheckUnguardedCHERIoTSealedVarUse(E))
+      return true;
+
   // Cannot throw WebAssembly reference type.
   if (Ty.isWebAssemblyReferenceType()) {
     Diag(ThrowLoc, diag::err_wasm_reftype_tc) << 0 << E->getSourceRange();
@@ -4534,6 +4539,13 @@ static ExprResult BuildCXXCastArgument(Sema &S,
                                        DeclAccessPair FoundDecl,
                                        bool HadMultipleCandidates,
                                        Expr *From) {
+
+  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
+  if (!S.isUnevaluatedContext() &&
+      S.Context.getTargetInfo().getABI() == "cheriot")
+    if (S.CheckUnguardedCHERIoTSealedVarUse(From))
+      return ExprError();
+
   switch (Kind) {
   default: llvm_unreachable("Unhandled cast kind!");
   case CK_ConstructorConversion: {
@@ -4593,6 +4605,11 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
                                 const ImplicitConversionSequence &ICS,
                                 AssignmentAction Action,
                                 CheckedConversionKind CCK) {
+  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
+  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
+    if (CheckUnguardedCHERIoTSealedVarUse(From))
+      return ExprError();
+
   // C++ [over.match.oper]p7: [...] operands of class type are converted [...]
   if (CCK == CheckedConversionKind::ForBuiltinOverloadedOp &&
       !From->getType()->isRecordType())
@@ -5851,21 +5868,6 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS,
                                            ExprResult &RHS, ExprValueKind &VK,
                                            ExprObjectKind &OK,
                                            SourceLocation QuestionLoc) {
-  // CHERIoT-specific check.
-  if (!isUnevaluatedContext()) {
-    if (LHS.get()->getType().hasCHERIoTSealedAttr()) {
-      Diag(LHS.get()->getExprLoc(),
-           diag::err_cheriot_non_addr_of_expr_on_sealed);
-      return QualType();
-    }
-
-    if (RHS.get()->getType().hasCHERIoTSealedAttr()) {
-      Diag(RHS.get()->getExprLoc(),
-           diag::err_cheriot_non_addr_of_expr_on_sealed);
-      return QualType();
-    }
-  }
-
   // FIXME: Handle C99's complex types, block pointers and Obj-C++ interface
   // pointers.
 

@@ -4745,6 +4745,12 @@ MemInitResult
 Sema::BuildBaseInitializer(QualType BaseType, TypeSourceInfo *BaseTInfo,
                            Expr *Init, CXXRecordDecl *ClassDecl,
                            SourceLocation EllipsisLoc) {
+
+  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
+  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
+    if (CheckUnguardedCHERIoTSealedVarUse(Init))
+      return true;
+
   SourceLocation BaseLoc = BaseTInfo->getTypeLoc().getBeginLoc();
 
   if (!BaseType->isDependentType() && !BaseType->isRecordType())
@@ -16337,6 +16343,12 @@ ExprResult Sema::BuildCXXConstructExpr(
   MarkFunctionReferenced(ConstructLoc, Constructor);
   if (getLangOpts().CUDA && !CUDA().CheckCall(ConstructLoc, Constructor))
     return ExprError();
+
+  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
+  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
+    for (const Expr *E : ExprArgs)
+      if (CheckUnguardedCHERIoTSealedVarUse(E))
+        return ExprError();
 
   return CheckForImmediateInvocation(
       CXXConstructExpr::Create(
