@@ -893,11 +893,6 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
                                     R.getLookupNameInfo(), TemplateArgs);
 
   QualType BaseType = BaseExprType;
-  // CHERIoT-specific check.
-  if (!isUnevaluatedContext() && CheckUnguardedCHERIoTSealedVarUse(BaseExpr)) {
-    return ExprError();
-  }
-
   if (IsArrow) {
     assert(BaseType->isPointerType());
     BaseType = BaseType->castAs<PointerType>()->getPointeeType();

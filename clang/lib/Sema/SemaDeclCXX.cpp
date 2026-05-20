@@ -4745,12 +4745,6 @@ MemInitResult
 Sema::BuildBaseInitializer(QualType BaseType, TypeSourceInfo *BaseTInfo,
                            Expr *Init, CXXRecordDecl *ClassDecl,
                            SourceLocation EllipsisLoc) {
-
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
-    if (CheckUnguardedCHERIoTSealedVarUse(Init))
-      return true;
-
   SourceLocation BaseLoc = BaseTInfo->getTypeLoc().getBeginLoc();
 
   if (!BaseType->isDependentType() && !BaseType->isRecordType())

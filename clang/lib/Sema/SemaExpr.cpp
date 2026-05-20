@@ -686,7 +686,6 @@ static void DiagnoseDirectIsaAccess(Sema &S, const ObjCIvarRefExpr *OIRE,
 }
 
 ExprResult Sema::DefaultLvalueConversion(Expr *E) {
-
   // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
   if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
     if (CheckUnguardedCHERIoTSealedVarUse(E))
@@ -6757,24 +6756,6 @@ ExprResult Sema::BuildCallExpr(Scope *Scope, Expr *Fn, SourceLocation LParenLoc,
                                MultiExprArg ArgExprs, SourceLocation RParenLoc,
                                Expr *ExecConfig, bool IsExecConfig,
                                bool AllowRecovery) {
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() &&
-      Context.getTargetInfo().getABI() == "cheriot") {
-    if (CheckUnguardedCHERIoTSealedVarUse(Fn))
-      return ExprError();
-
-    for (const Expr *Arg : ArgExprs) {
-
-      // CHERIoT-specific check: use of unguarded sealed variables is not
-      // allowed.
-      if (!isUnevaluatedContext() &&
-          Context.getTargetInfo().getABI() == "cheriot") {
-        if (CheckUnguardedCHERIoTSealedVarUse(Arg))
-          return ExprError();
-      }
-    }
-  }
-
   // Since this might be a postfix expression, get rid of ParenListExprs.
   ExprResult Result = MaybeConvertParenListExprToParenExpr(Scope, Fn);
   if (Result.isInvalid()) return ExprError();
@@ -7046,19 +7027,6 @@ ExprResult Sema::BuildResolvedCallExpr(Expr *Fn, NamedDecl *NDecl,
                                        ArrayRef<Expr *> Args,
                                        SourceLocation RParenLoc, Expr *Config,
                                        bool IsExecConfig, ADLCallKind UsesADL) {
-
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() &&
-      Context.getTargetInfo().getABI() == "cheriot") {
-
-    bool HasErrors = CheckUnguardedCHERIoTSealedVarUse(Fn);
-    for (const Expr *E : Args)
-      HasErrors |= CheckUnguardedCHERIoTSealedVarUse(E);
-
-    if (HasErrors)
-      return ExprError();
-  }
-
   FunctionDecl *FDecl = dyn_cast_or_null<FunctionDecl>(NDecl);
   unsigned BuiltinID = (FDecl ? FDecl->getBuiltinID() : 0);
 
@@ -7598,13 +7566,6 @@ Sema::ActOnInitList(SourceLocation LBraceLoc, MultiExprArg InitArgList,
 ExprResult
 Sema::BuildInitList(SourceLocation LBraceLoc, MultiExprArg InitArgList,
                     SourceLocation RBraceLoc) {
-
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
-    for (const Expr *E : InitArgList)
-      if (CheckUnguardedCHERIoTSealedVarUse(E))
-        return ExprError();
-
   // Semantic analysis for initializers is done by ActOnDeclarator() and
   // CheckInitializer() - it requires knowledge of the object being initialized.
 
@@ -8220,11 +8181,6 @@ ExprResult Sema::BuildVectorLiteral(SourceLocation LParenLoc,
                                     TypeSourceInfo *TInfo) {
   assert((isa<ParenListExpr>(E) || isa<ParenExpr>(E)) &&
          "Expected paren or paren list expression");
-
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
-    if (CheckUnguardedCHERIoTSealedVarUse(E))
-      return ExprError();
 
   Expr **exprs;
   unsigned numExprs;
@@ -9222,8 +9178,7 @@ ExprResult Sema::ActOnConditionalOp(SourceLocation QuestionLoc,
                                     Expr *RHSExpr) {
   // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
   if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
-    if (CheckUnguardedCHERIoTSealedVarUse(CondExpr) ||
-        CheckUnguardedCHERIoTSealedVarUse(LHSExpr) ||
+    if (CheckUnguardedCHERIoTSealedVarUse(LHSExpr) ||
         CheckUnguardedCHERIoTSealedVarUse(RHSExpr))
       return ExprError();
 
@@ -16144,12 +16099,6 @@ ExprResult Sema::BuildBinOp(Scope *S, SourceLocation OpLoc,
   if (!LHSExpr || !RHSExpr)
     return ExprError();
 
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
-    if (CheckUnguardedCHERIoTSealedVarUse(LHSExpr) ||
-        CheckUnguardedCHERIoTSealedVarUse(RHSExpr))
-      return ExprError();
-
   // We want to end up calling one of SemaPseudoObject::checkAssignment
   // (if the LHS is a pseudo-object), BuildOverloadedBinOp (if
   // both expressions are overloadable or either is type-dependent),
@@ -16609,25 +16558,6 @@ bool Sema::isQualifiedMemberAccess(Expr *E) {
 ExprResult Sema::BuildUnaryOp(Scope *S, SourceLocation OpLoc,
                               UnaryOperatorKind Opc, Expr *Input,
                               bool IsAfterAmp) {
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() &&
-      Context.getTargetInfo().getABI() == "cheriot") {
-    DeclRefExpr *MaybeSealedVar = dyn_cast<DeclRefExpr>(Input);
-
-    bool IsSealedVar =
-        MaybeSealedVar &&
-        MaybeSealedVar->getDecl()->hasAttr<CHERIoTSealedObjectAttr>();
-    if (IsSealedVar && Opc != UnaryOperatorKind::UO_AddrOf) {
-      return ExprError(Diag(Input->getExprLoc(),
-                            diag::err_cheriot_non_addr_of_expr_on_sealed));
-    }
-
-    bool IsSimpleLegal = IsSealedVar && Opc == UnaryOperatorKind::UO_AddrOf;
-    if (!IsSimpleLegal && CheckUnguardedCHERIoTSealedVarUse(Input)) {
-      return ExprError();
-    }
-  }
-
   // First things first: handle placeholders so that the
   // overloaded-operator check considers the right type.
   if (const BuiltinType *pty = Input->getType()->getAsPlaceholderType()) {
@@ -17339,11 +17269,6 @@ ExprResult Sema::ActOnBlockStmtExpr(SourceLocation CaretLoc,
     return CreateRecoveryExpr(Result->getBeginLoc(), Result->getEndLoc(),
                               {Result}, Result->getType());
 
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
-    if (CheckUnguardedCHERIoTSealedVarUse(Result))
-      return ExprError();
-
   return Result;
 }
 
@@ -17514,11 +17439,6 @@ ExprResult Sema::BuildVAArgExpr(SourceLocation BuiltinLoc,
 
   QualType T = TInfo->getType().getNonLValueExprType(Context);
   Expr *Res = new (Context) VAArgExpr(BuiltinLoc, E, TInfo, RPLoc, T, IsMS);
-
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
-    if (CheckUnguardedCHERIoTSealedVarUse(Res))
-      return ExprError();
 
   return Res;
 }
@@ -18525,12 +18445,6 @@ void Sema::MarkExpressionAsImmediateEscalating(Expr *E) {
 }
 
 ExprResult Sema::CheckForImmediateInvocation(ExprResult E, FunctionDecl *Decl) {
-
-  // CHERIoT-specific check: use of unguarded sealed variables is not allowed.
-  if (!isUnevaluatedContext() && Context.getTargetInfo().getABI() == "cheriot")
-    if (CheckUnguardedCHERIoTSealedVarUse(E.get()))
-      return ExprError();
-
   if (isUnevaluatedContext() || !E.isUsable() || !Decl ||
       !Decl->isImmediateFunction() || isAlwaysConstantEvaluatedContext() ||
       isCheckingDefaultArgumentOrInitializer() ||

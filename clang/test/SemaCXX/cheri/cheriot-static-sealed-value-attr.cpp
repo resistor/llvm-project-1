@@ -60,10 +60,11 @@ void func() {
   useInt(IntInitAndSeal); // expected-error{{the only valid operation on a sealed value is to take its address}}
   useRefToInt(&IntInitAndSeal); // expected-error{{converting sealed type 'int * __sealed_capability' to non-sealed type 'int *' without an explicit unsealing}}
   int ShouldFail2 = IntInitAndSeal + 10; // expected-error{{the only valid operation on a sealed value is to take its address}}
-  int ShouldFail3 = IntInitAndSeal? // expected-error{{the only valid operation on a sealed value is to take its address}}
-                                   IntInitAndSeal + 1 // expected-error{{the only valid operation on a sealed value is to take its address}}
-                                   : IntInitAndSeal + 4; // expected-error{{the only valid operation on a sealed value is to take its address}}
-  int ShouldFail4 = IntInitAndSeal < // expected-error{{the only valid operation on a sealed value is to take its address}}
-                                        IntInitAndSeal + 1; // expected-error{{the only valid operation on a sealed value is to take its address}}
+  int ShouldFail3 = (0 == 0) ? IntInitAndSeal : 0; // expected-error{{the only valid operation on a sealed value is to take its address}}
+  int ShouldFail4 = (0 == 0) ? 0 : IntInitAndSeal; // expected-error{{the only valid operation on a sealed value is to take its address}}
+  int ShouldFail5 = IntInitAndSeal ? 0 : 1; // expected-error{{the only valid operation on a sealed value is to take its address}}
+  int ShouldFail6 = IntInitAndSeal < 0; // expected-error{{the only valid operation on a sealed value is to take its address}}
+  int ShouldFail7 = 0 < IntInitAndSeal; // expected-error{{the only valid operation on a sealed value is to take its address}}
+
   useSealedInt(&IntInitAndSeal);
 }
